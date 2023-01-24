@@ -1,0 +1,38 @@
+Arguments: 
+  /Users/tobowers/.nvm/versions/node/v16.15.0/bin/node /Users/tobowers/.yarn/bin/yarn.js add --dev hardhat @nomicfoundation/hardhat-toolbox
+
+PATH: 
+  /Users/tobowers/.yarn/bin:/Users/tobowers/.config/yarn/global/node_modules/.bin:/Users/tobowers/.local/share/solana/install/active_release/bin:/Users/tobowers/.nvm/versions/node/v16.15.0/bin:/Users/tobowers/.cargo/bin:./bin:/usr/local/sbin:/usr/local/bin:/Users/tobowers/code/go/bin:/Users/tobowers/bin:/usr/local/opt/ruby/bin:/tools:/platform-tools:/usr/local/share/npm/bin:./node_modules/.bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/go/bin:/Library/Apple/usr/bin:/Library/Frameworks/Mono.framework/Versions/Current/Commands:/usr/local/lib/ruby/gems/2.6.0/bin:/Users/tobowers/Library/Python/3.7/bin
+
+Yarn version: 
+  1.22.19
+
+Node version: 
+  16.15.0
+
+Platform: 
+  darwin x64
+
+Trace: 
+  TypeError: Cannot read properties of undefined (reading 'manifest')
+      at _loop (/Users/tobowers/.yarn/lib/cli.js:6977:102)
+      at _loop.next (<anonymous>)
+      at Add.<anonymous> (/Users/tobowers/.yarn/lib/cli.js:7035:27)
+      at Generator.next (<anonymous>)
+      at step (/Users/tobowers/.yarn/lib/cli.js:310:30)
+      at /Users/tobowers/.yarn/lib/cli.js:321:13
+
+npm manifest: 
+  {
+    "name": "hardhat-project",
+    "dependencies": {
+      "@nomicfoundation/hardhat-toolbox": "^2.0.1",
+      "hardhat": "^2.12.6"
+    }
+  }
+
+yarn manifest: 
+  No manifest
+
+Lockfile: 
+  No lockfile
