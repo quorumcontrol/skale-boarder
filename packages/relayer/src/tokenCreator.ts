@@ -28,8 +28,8 @@ export async function bytesToSignForToken(trustedForwarder: TrustedForwarder, us
   const nonce = await trustedForwarder.getNonceAt(issuedAt)
 
   let stringToSign = service +
-    " wants you to sign in with your Ethereum account: " +
-    (await user.getAddress()).toLowerCase() +
+    " wants you to authorize this device with your address: " +
+  (await user.getAddress()).toLowerCase() +
     "\n\n" +
     statement +
     "\n\n" +
@@ -43,7 +43,7 @@ export async function bytesToSignForToken(trustedForwarder: TrustedForwarder, us
     "\n" +
     "Issued At: " + issuedAt.toString(10) +
     "\n" +
-    "Request ID: " + (await relayer.getAddress()).toLowerCase()
+    "Device ID: " + (await relayer.getAddress()).toLowerCase()
 
   if (sessionExpiry && BigNumber.from(sessionExpiry).gt(0)) {
     stringToSign =

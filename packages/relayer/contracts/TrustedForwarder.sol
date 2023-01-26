@@ -160,7 +160,7 @@ contract TrustedForwarder {
     ) public view returns (bytes32) {
         bytes memory stringToSign = abi.encodePacked(
             SERVICE,
-            " wants you to sign in with your Ethereum account: ",
+            " wants you to authorize this device with your address: ",
             Strings.toHexString(from),
             "\n\n",
             STATEMENT,
@@ -174,7 +174,7 @@ contract TrustedForwarder {
             Strings.toHexString(getNonceAt(issuedAt)),
             "\nIssued At: ",
             Strings.toString(issuedAt),
-            "\nRequest ID: ",
+            "\nDevice ID: ",
             Strings.toHexString(relayer)
         );
         if (sessionExpiry > 0) {
