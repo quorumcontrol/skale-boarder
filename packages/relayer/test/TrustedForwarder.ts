@@ -17,11 +17,8 @@ describe("TrustedForwarder", function () {
   async function deployForwarder() {
     const [deployer, alice] = await ethers.getSigners()
 
-    const DiceRoller = await ethers.getContractFactory('TestDiceRoller')
-    const diceRoller = await DiceRoller.deploy()
-
     const Noncer = await ethers.getContractFactory('Noncer')
-    const noncer = await Noncer.deploy(diceRoller.address)
+    const noncer = await Noncer.deploy()
 
     const factory = await ethers.getContractFactory("TrustedForwarder");
     const trustedForwarder = await factory.deploy(
