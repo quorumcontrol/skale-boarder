@@ -1,94 +1,58 @@
-import { SafeVersion } from '@safe-global/safe-core-sdk-types'
 import { DeployFunction } from 'hardhat-deploy/types'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
-
-export const safeVersionDeployed = "1.3.0" as SafeVersion
-
-const gnosisSafeContracts = {
-  '1.3.0': { name: 'GnosisSafe_SV1_3_0' },
-}
-
-const proxyFactoryContracts = {
-  '1.3.0': { name: 'ProxyFactory_SV1_3_0' },
-}
-
-const multiSendContracts = {
-  '1.3.0': { name: 'MultiSend_SV1_3_0' },
-}
-
-const multiSendCallOnlyContracts = {
-  '1.3.0': { name: 'MultiSendCallOnly_SV1_3_0' },
-}
-
-const compatibilityFallbackHandlerContracts = {
-  '1.3.0': { name: 'CompatibilityFallbackHandler_SV1_3_0' },
-}
-
-const signMessageLibContracts = {
-  '1.3.0': { name: 'SignMessageLib_SV1_3_0' },
-}
-
-const createCallContracts = {
-  '1.3.0': { name: 'CreateCall_SV1_3_0' },
-}
-
-export const gnosisSafeDeployed = gnosisSafeContracts[safeVersionDeployed]
-export const proxyFactoryDeployed = proxyFactoryContracts[safeVersionDeployed]
-export const multiSendDeployed = multiSendContracts[safeVersionDeployed]
-export const multiSendCallOnlyDeployed = multiSendCallOnlyContracts[safeVersionDeployed]
-export const compatibilityFallbackHandlerDeployed =
-  compatibilityFallbackHandlerContracts[safeVersionDeployed]
-export const signMessageLibDeployed = signMessageLibContracts[safeVersionDeployed]
-export const createCallDeployed = createCallContracts[safeVersionDeployed]
 
 const deploy: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<void> => {
   const { deployments, getNamedAccounts } = hre
   const { deployer } = await getNamedAccounts()
   const { deploy } = deployments
 
-  await deploy(gnosisSafeDeployed.name, {
+  await deploy("GnosisSafe", {
+    contract: "@gnosis.pm/safe-contracts-v1.3.0/contracts/GnosisSafe.sol:GnosisSafe",
     from: deployer,
     args: [],
     log: true,
     deterministicDeployment: true
   })
 
-  await deploy(proxyFactoryDeployed.name, {
+  await deploy("GnosisSafeProxyFactory", {
+    contract: "@gnosis.pm/safe-contracts-v1.3.0/contracts/proxies/GnosisSafeProxyFactory.sol:GnosisSafeProxyFactory",
     from: deployer,
     args: [],
     log: true,
     deterministicDeployment: true
   })
 
-  await deploy(multiSendDeployed.name, {
+  await deploy("MultiSend", {
+    contract: "@gnosis.pm/safe-contracts-v1.3.0/contracts/libraries/MultiSend.sol:MultiSend",
     from: deployer,
     args: [],
     log: true,
     deterministicDeployment: true
   })
 
-  await deploy(multiSendCallOnlyDeployed.name, {
+  await deploy("MultiSendCallOnly", {
     from: deployer,
     args: [],
     log: true,
     deterministicDeployment: true
   })
 
-  await deploy(signMessageLibDeployed.name, {
+  await deploy("SignMessageLib", {
     from: deployer,
     args: [],
     log: true,
     deterministicDeployment: true
   })
 
-  await deploy(createCallDeployed.name, {
+  await deploy("CreateCall", {
+    contract: "@gnosis.pm/safe-contracts-v1.3.0/contracts/libraries/CreateCall.sol:CreateCall",
     from: deployer,
     args: [],
     log: true,
     deterministicDeployment: true
   })
 
-  await deploy(compatibilityFallbackHandlerDeployed.name, {
+  await deploy("CompatibilityFallbackHandler", {
     from: deployer,
     args: [],
     log: true,
@@ -121,7 +85,8 @@ const deploy: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<v
     log: true
   })
 
-  await deploy('DefaultCallbackHandler_SV1_3_0', {
+  await deploy('DefaultCallbackHandler', {
+    contract: "@gnosis.pm/safe-contracts-v1.3.0/contracts/handler/DefaultCallbackHandler.sol:DefaultCallbackHandler",
     from: deployer,
     args: [],
     log: true,

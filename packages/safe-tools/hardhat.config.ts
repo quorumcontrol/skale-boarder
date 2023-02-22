@@ -1,5 +1,4 @@
-import '@nomiclabs/hardhat-ethers'
-import '@nomiclabs/hardhat-waffle'
+import "@nomicfoundation/hardhat-toolbox";
 import dotenv from 'dotenv'
 import 'hardhat-deploy'
 import { HardhatUserConfig, HttpNetworkUserConfig } from 'hardhat/types'
@@ -44,6 +43,7 @@ const config: HardhatUserConfig = {
   paths: {
     artifacts: 'artifacts',
     deploy: 'hardhat/deploy',
+    deployments: "deployments",
     sources: 'contracts',
     tests: 'tests'
   },
@@ -73,6 +73,13 @@ const config: HardhatUserConfig = {
       ...sharedNetworkConfig,
       url: `https://goerli.infura.io/v3/${INFURA_KEY}`,
     }
+  },
+  external: {
+    contracts: [
+      {
+        artifacts: 'safe-core-sdk/packages/safe-core-sdk/artifacts',
+      }
+    ]
   },
   namedAccounts: {
     deployer: {
