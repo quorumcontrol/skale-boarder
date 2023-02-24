@@ -1,0 +1,3 @@
+[submodule "packages/safe-tools/safe-core-sdk"]
+	path = packages/safe-tools/safe-core-sdk
+	url = https://github.com/safe-global/safe-core-sdk.git
