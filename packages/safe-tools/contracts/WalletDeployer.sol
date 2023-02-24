@@ -6,12 +6,19 @@ import "./TokenAuthenticated.sol";
 
 // import "hardhat/console.sol";
 
+interface IProxyFactory {
+    function createProxyWithNonce(
+        address _mastercopy,
+        bytes memory initializer,
+        uint256 saltNonce
+    ) external returns (address proxy);
+}
+
 /**
  * @title WalletDeployer
  * @dev A contract that allows a user to create a Gnosis Safe wallet by signing an English message.
  */
 contract WalletDeployer is TokenAuthenticated {
-
     string public CHAIN_ID;
 
     address private immutable _gnosisSafeContract;
@@ -22,12 +29,20 @@ contract WalletDeployer is TokenAuthenticated {
 
     bytes4 private constant SETUP_DATA = bytes4(keccak256("setup()"));
 
+    // a mapping of owner to safe address
+    mapping(address => address) public ownerToSafe;
+    mapping(address => address) public safeToOwner;
+
     constructor(
         address gnosisSafeContract,
         address gnosisSafeProxyFactory,
         address defaultFallbackHandler,
         address setupHandler
-    ) TokenAuthenticated("I authorize this device to send transactions on my behalf") {
+    )
+        TokenAuthenticated(
+            "I authorize this device to send transactions on my behalf"
+        )
+    {
         CHAIN_ID = Strings.toString(block.chainid);
         _gnosisSafeContract = gnosisSafeContract;
         _gnosisSafeProxyFactory = gnosisSafeProxyFactory;
@@ -44,6 +59,10 @@ contract WalletDeployer is TokenAuthenticated {
         TokenRequest calldata request,
         bytes calldata signature
     ) public {
+        require(
+            ownerToSafe[request.owner] == address(0),
+            "Safe already exists for owner"
+        );
         require(authenticate(request, signature));
 
         // not sure exactly why, but it's important that this array is a memory address[] so that the initializer is encoded properly
@@ -70,21 +89,10 @@ contract WalletDeployer is TokenAuthenticated {
             address(0) // set the payment fee receiver address
         );
 
-        // call the proxy factory with the gnosis safe contract as the template and the initializer as the initializer
-        (bool success, bytes memory returnData) = _gnosisSafeProxyFactory.call(
-            abi.encodeWithSignature(
-                "createProxyWithNonce(address,bytes,uint256)",
-                _gnosisSafeContract,
-                initializer,
-                block.chainid
-            )
-        );
-        require(
-            success,
-            string(
-                abi.encodePacked("failed to create proxy: ", string(returnData))
-            )
-        );
-    }
+        address proxyAddr = IProxyFactory(_gnosisSafeProxyFactory)
+            .createProxyWithNonce(_gnosisSafeContract, initializer, block.chainid);
 
+        ownerToSafe[request.owner] = proxyAddr;
+        safeToOwner[proxyAddr] = request.owner;
+    }
 }

@@ -107,6 +107,24 @@ describe("the safe SDK works", () => {
         expect(await safe.isOwner(aliceDevice.address)).to.be.true
     })
 
+    it("saves wallet address", async () => {
+        const { signers, walletDeployer, ethAdapter, contractNetworks } = await setupTest()
+        const alice = signers[1]
+        const walletCreator = walletDeployer.connect(alice)
+        const aliceDevice = signers[2]
+
+        const { tokenRequest, signature } = await getBytesAndCreateToken(walletDeployer, alice, aliceDevice.address)
+        const tx = walletCreator.createSafe(tokenRequest, signature)
+        await expect(tx).to.not.be.reverted
+
+        // const safeFactory = await SafeFactory.create({ ethAdapter, contractNetworks })
+
+        const receipt = await (await tx).wait()
+        const proxyAddress = await proxyAddressFromReceipt(receipt, ethAdapter, contractNetworks)
+
+        expect(await walletDeployer.ownerToSafe(alice.address)).to.equal(proxyAddress)
+    })
+
     describe("EnglishOwnerAdder", () => {
         const fixture = async () => {
             const { signers, deployer, deploys, walletDeployer, ethAdapter, contractNetworks } = await setupTest()
