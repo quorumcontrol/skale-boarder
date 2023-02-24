@@ -2,8 +2,7 @@
 
 pragma solidity ^0.8.19;
 
-import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
+import "./TokenAuthenticated.sol";
 
 // import "hardhat/console.sol";
 
@@ -11,9 +10,8 @@ import "@openzeppelin/contracts/utils/Strings.sol";
  * @title WalletDeployer
  * @dev A contract that allows a user to create a Gnosis Safe wallet by signing an English message.
  */
-contract WalletDeployer {
-    string public STATEMENT =
-        "I authorize this device to send transactions on my behalf";
+contract WalletDeployer is TokenAuthenticated {
+
     string public CHAIN_ID;
 
     address private immutable _gnosisSafeContract;
@@ -24,18 +22,12 @@ contract WalletDeployer {
 
     bytes4 private constant SETUP_DATA = bytes4(keccak256("setup()"));
 
-    struct SafeCreateRequest {
-        address owner;
-        address firstDevice;
-        uint256 issuedAt;
-    }
-
     constructor(
         address gnosisSafeContract,
         address gnosisSafeProxyFactory,
         address defaultFallbackHandler,
         address setupHandler
-    ) {
+    ) TokenAuthenticated("I authorize this device to send transactions on my behalf") {
         CHAIN_ID = Strings.toString(block.chainid);
         _gnosisSafeContract = gnosisSafeContract;
         _gnosisSafeProxyFactory = gnosisSafeProxyFactory;
@@ -49,26 +41,20 @@ contract WalletDeployer {
      * @param signature The signature signed by the owner to verify ownership.
      */
     function createSafe(
-        SafeCreateRequest calldata request,
+        TokenRequest calldata request,
         bytes calldata signature
     ) public {
-        bytes32 msgHash = hashForToken(request);
-        address signer = ECDSA.recover(msgHash, signature);
-        require(signer == request.owner, "invalid signature");
-        require(
-            request.issuedAt >= block.number - 15,
-            "Only 15 blocks old requests are allowed"
-        );
+        require(authenticate(request, signature));
 
         // not sure exactly why, but it's important that this array is a memory address[] so that the initializer is encoded properly
         address[] memory owners;
-        if (request.firstDevice == address(0)) {
+        if (request.device == address(0)) {
             owners = new address[](1);
             owners[0] = request.owner;
         } else {
             owners = new address[](2);
             owners[0] = request.owner;
-            owners[1] = request.firstDevice;
+            owners[1] = request.device;
         }
 
         bytes memory initializer = abi.encodeWithSignature(
@@ -101,32 +87,4 @@ contract WalletDeployer {
         );
     }
 
-    function hashForToken(
-        SafeCreateRequest calldata request
-    ) public view returns (bytes32) {
-        bytes memory stringToSign = abi.encodePacked(
-            STATEMENT,
-            "\n\nMy address:",
-            Strings.toHexString(request.owner),
-            "\nDevice:",
-            Strings.toHexString(request.firstDevice),
-            "\nIssued at:",
-            Strings.toString(request.issuedAt)
-        );
-        return ECDSA.toEthSignedMessageHash(stringToSign);
-    }
-
-    function iToHex(bytes memory buffer) private pure returns (string memory) {
-        // Fixed buffer size for hexadecimal convertion
-        bytes memory converted = new bytes(buffer.length * 2);
-
-        bytes memory _base = "0123456789abcdef";
-
-        for (uint256 i = 0; i < buffer.length; i++) {
-            converted[i * 2] = _base[uint8(buffer[i]) / _base.length];
-            converted[i * 2 + 1] = _base[uint8(buffer[i]) % _base.length];
-        }
-
-        return string(abi.encodePacked("0x", converted));
-    }
 }

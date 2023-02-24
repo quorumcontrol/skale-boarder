@@ -8,7 +8,7 @@ import { SafeAccountConfig } from '../safe-core-sdk/packages/safe-core-sdk/src'
 import { ContractNetworksConfig } from '@safe-global/safe-core-sdk/dist/src/types'
 import { getBytesAndCreateToken } from '../src/tokenCreator'
 import { EnglishOwnerAddition, WalletDeployer } from '../typechain-types'
-import { Proxy_factory__factory } from "@safe-global/safe-ethers-lib/dist/typechain/src/ethers-v5/v1.3.0"
+import { loadFixture } from "@nomicfoundation/hardhat-network-helpers"
 
 describe("the safe SDK works", () => {
     const setupTest = deployments.createFixture(
@@ -48,7 +48,7 @@ describe("the safe SDK works", () => {
         const { deployer, ethAdapter, contractNetworks, signers } = await setupTest()
 
         const safeFactory = await SafeFactory.create({ ethAdapter, contractNetworks })
-        const owners = [deployer.address,  signers[1].address]
+        const owners = [deployer.address, signers[1].address]
         const threshold = 1
         const safeAccountConfig: SafeAccountConfig = {
             owners,
@@ -62,8 +62,8 @@ describe("the safe SDK works", () => {
         expect(await safe.isOwner(deployer.address)).to.be.true
     })
 
-    async function proxyAddressFromReceipt(receipt:ContractReceipt, ethAdapter:EthersAdapter, contractNetworks:ContractNetworksConfig) {
-        const proxyContract = ethAdapter.getSafeProxyFactoryContract({ 
+    async function proxyAddressFromReceipt(receipt: ContractReceipt, ethAdapter: EthersAdapter, contractNetworks: ContractNetworksConfig) {
+        const proxyContract = ethAdapter.getSafeProxyFactoryContract({
             safeVersion: "1.3.0",
             chainId: await ethAdapter.getChainId(),
             customContractAddress: contractNetworks[await ethAdapter.getChainId()].safeProxyFactoryAddress
@@ -96,7 +96,7 @@ describe("the safe SDK works", () => {
         const token = await getBytesAndCreateToken(walletDeployer, alice, aliceDevice)
         const tx = walletCreator.createSafe({
             owner: alice.address,
-            firstDevice: aliceDevice.address,
+            device: aliceDevice.address,
             issuedAt: token.issuedAt,
         }, token.signature)
         await expect(tx).to.not.be.reverted
@@ -111,23 +111,51 @@ describe("the safe SDK works", () => {
         expect(await safe.isOwner(aliceDevice.address)).to.be.true
     })
 
-    it("can setup the english owner adder at creation", async () => {
-        const { signers, deployer, deploys, walletDeployer, ethAdapter, contractNetworks } = await setupTest()
-        const alice = signers[1]
-        const aliceDevice = signers[2]
+    describe("EnglishOwnerAdder", () => {
+        const fixture = async () => {
+            const { signers, deployer, deploys, walletDeployer, ethAdapter, contractNetworks } = await setupTest()
+            const alice = signers[1]
+            const aliceDevice = signers[2]
 
-        // const englishOwnerAdder = (await ethers.getContractFactory("EnglishOwnerAddition")).attach(deploys.EnglishOwnerAddition.address).connect(deployer) as EnglishOwnerAddition
-        const token = await getBytesAndCreateToken(walletDeployer, alice, aliceDevice)
+            const englishOwnerAddition = (await ethers.getContractFactory("EnglishOwnerAddition")).attach(deploys.EnglishOwnerAddition.address).connect(deployer) as EnglishOwnerAddition
+            const token = await getBytesAndCreateToken(walletDeployer, alice, aliceDevice)
 
-        const receipt = await (await (walletDeployer as WalletDeployer).createSafe({
-            owner: alice.address,
-            firstDevice: aliceDevice.address,
-            issuedAt: token.issuedAt,
-        }, token.signature)).wait()
+            const receipt = await (await (walletDeployer as WalletDeployer).createSafe({
+                owner: alice.address,
+                device: aliceDevice.address,
+                issuedAt: token.issuedAt,
+            }, token.signature)).wait()
 
-        const proxyAddress = await proxyAddressFromReceipt(receipt, ethAdapter, contractNetworks)
+            const proxyAddress = await proxyAddressFromReceipt(receipt, ethAdapter, contractNetworks)
 
-        const safe = await Safe.create({ ethAdapter, contractNetworks, safeAddress: proxyAddress })
-        expect(await safe.getOwners()).to.have.lengthOf(2)
+            const safe = await Safe.create({ ethAdapter, contractNetworks, safeAddress: proxyAddress })
+            expect(await safe.getOwners()).to.have.lengthOf(2)
+
+            return { englishOwnerAddition, signers, deployer, safe, alice, aliceDevice, walletDeployer }
+        }
+
+        it("adds the english owner adder at setup", async () => {
+            const { englishOwnerAddition, signers, deployer, safe } = await loadFixture(fixture)
+            expect(await safe.isModuleEnabled(englishOwnerAddition.address)).to.be.true
+        })
+
+        it("can add an owner using an english signed token", async () => {
+            const { englishOwnerAddition, signers, deployer, safe, walletDeployer, alice, aliceDevice } = await loadFixture(fixture)
+            const newOwner = signers[3]
+            const token = await getBytesAndCreateToken(walletDeployer, alice, newOwner)
+            const tx = englishOwnerAddition.addOwner(
+                safe.getAddress(),
+                {
+                    owner: alice.address,
+                    device: newOwner.address,
+                    issuedAt: token.issuedAt,
+                },
+                token.signature
+            )
+            await expect(tx).to.not.be.reverted
+            expect(await safe.isOwner(newOwner.address)).to.be.true
+            expect(await safe.getOwners()).to.have.lengthOf(3)
+        })
     })
+
 })
