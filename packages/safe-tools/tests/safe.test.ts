@@ -7,7 +7,7 @@ import Safe, { SafeFactory } from '@safe-global/safe-core-sdk'
 import { SafeAccountConfig } from '../safe-core-sdk/packages/safe-core-sdk/src'
 import { ContractNetworksConfig } from '@safe-global/safe-core-sdk/dist/src/types'
 import { getBytesAndCreateToken } from '../src/tokenCreator'
-import { EnglishOwnerAddition, WalletDeployer } from '../typechain-types'
+import { EnglishOwnerAdder, EnglishOwnerRemover, WalletDeployer } from '../typechain-types'
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers"
 
 describe("the safe SDK works", () => {
@@ -113,7 +113,7 @@ describe("the safe SDK works", () => {
             const alice = signers[1]
             const aliceDevice = signers[2]
 
-            const englishOwnerAddition = (await ethers.getContractFactory("EnglishOwnerAddition")).attach(deploys.EnglishOwnerAddition.address).connect(deployer) as EnglishOwnerAddition
+            const englishOwnerAdder = (await ethers.getContractFactory("EnglishOwnerAdder")).attach(deploys.EnglishOwnerAdder.address).connect(deployer) as EnglishOwnerAdder
             const { tokenRequest, signature } = await getBytesAndCreateToken(walletDeployer, alice, aliceDevice.address)
 
             const receipt = await (await (walletDeployer as WalletDeployer).createSafe(tokenRequest, signature)).wait()
@@ -123,19 +123,19 @@ describe("the safe SDK works", () => {
             const safe = await Safe.create({ ethAdapter, contractNetworks, safeAddress: proxyAddress })
             expect(await safe.getOwners()).to.have.lengthOf(2)
 
-            return { englishOwnerAddition, signers, deployer, safe, alice, aliceDevice, walletDeployer }
+            return { englishOwnerAdder, signers, deployer, safe, alice, aliceDevice, walletDeployer }
         }
 
         it("adds the english owner adder at setup", async () => {
-            const { englishOwnerAddition, signers, deployer, safe } = await loadFixture(fixture)
-            expect(await safe.isModuleEnabled(englishOwnerAddition.address)).to.be.true
+            const { englishOwnerAdder, safe } = await loadFixture(fixture)
+            expect(await safe.isModuleEnabled(englishOwnerAdder.address)).to.be.true
         })
 
         it("can add an owner using an english signed token", async () => {
-            const { englishOwnerAddition, signers, deployer, safe, walletDeployer, alice, aliceDevice } = await loadFixture(fixture)
+            const { englishOwnerAdder, signers, safe, alice } = await loadFixture(fixture)
             const newOwner = signers[3]
-            const { tokenRequest, signature } = await getBytesAndCreateToken(walletDeployer, alice, newOwner.address)
-            const tx = englishOwnerAddition.addOwner(
+            const { tokenRequest, signature } = await getBytesAndCreateToken(englishOwnerAdder, alice, newOwner.address)
+            const tx = englishOwnerAdder.addOwner(
                 safe.getAddress(),
                 tokenRequest,
                 signature
@@ -143,6 +143,49 @@ describe("the safe SDK works", () => {
             await expect(tx).to.not.be.reverted
             expect(await safe.isOwner(newOwner.address)).to.be.true
             expect(await safe.getOwners()).to.have.lengthOf(3)
+        })
+    })
+
+    describe("EnglishOwnerRemover", () => {
+        const fixture = async () => {
+            const { signers, deployer, deploys, walletDeployer, ethAdapter, contractNetworks } = await setupTest()
+            const alice = signers[1]
+            const aliceDevice = signers[2]
+
+            const englishOwnerRemover = (await ethers.getContractFactory("EnglishOwnerRemover")).attach(deploys.EnglishOwnerRemover.address).connect(deployer) as EnglishOwnerRemover
+            
+            const { tokenRequest, signature } = await getBytesAndCreateToken(walletDeployer, alice, aliceDevice.address)
+            const receipt = await (await (walletDeployer as WalletDeployer).createSafe(tokenRequest, signature)).wait()
+            const proxyAddress = await proxyAddressFromReceipt(receipt, ethAdapter, contractNetworks)
+
+            const safe = await Safe.create({ ethAdapter, contractNetworks, safeAddress: proxyAddress })
+            expect(await safe.getOwners()).to.have.lengthOf(2)
+
+            return { englishOwnerRemover, signers, deployer, safe, alice, aliceDevice, walletDeployer }
+        }
+
+        it("is added at setup", async () => {
+            const { englishOwnerRemover, safe } = await loadFixture(fixture)
+            expect(await safe.isModuleEnabled(englishOwnerRemover.address)).to.be.true
+        })
+
+        it("can remove an owner using an english signed token", async () => {
+            const { englishOwnerRemover, signers, safe, walletDeployer, alice, aliceDevice } = await loadFixture(fixture)
+            // this is a little strange because we have to find the owner right before aliceDevice in the list of owners and use that as the value for previousOwner
+            const owners = await safe.getOwners()
+            const aliceDeviceIndex = owners.findIndex((o) => o === aliceDevice.address)
+            const previousOwner = owners[Math.min(aliceDeviceIndex - 1, 0)]
+
+            const { tokenRequest, signature } = await getBytesAndCreateToken(englishOwnerRemover, alice, aliceDevice.address)
+            const tx = englishOwnerRemover.removeOwner(
+                safe.getAddress(),
+                previousOwner,
+                tokenRequest,
+                signature
+            )
+            await expect(tx).to.not.be.reverted
+            expect(await safe.isOwner(aliceDevice.address)).to.be.false
+            expect(await safe.getOwners()).to.have.lengthOf(1)
         })
     })
 

@@ -94,7 +94,14 @@ const deploy: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<v
   })
 
 
-  const englishOwnerAdder = await deploy("EnglishOwnerAddition", {
+  const englishOwnerAdder = await deploy("EnglishOwnerAdder", {
+    from: deployer,
+    args: [],
+    log: true,
+    deterministicDeployment: true,
+  })
+
+  const englishOwnerRmover = await deploy("EnglishOwnerRemover", {
     from: deployer,
     args: [],
     log: true,
@@ -103,7 +110,7 @@ const deploy: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<v
 
   const setupHandler = await deploy("SafeSetup", {
     from: deployer,
-    args: [englishOwnerAdder.address],
+    args: [englishOwnerAdder.address, englishOwnerRmover.address],
     log: true,
     deterministicDeployment: true,
   })

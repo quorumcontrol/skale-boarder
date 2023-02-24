@@ -4,19 +4,19 @@ pragma solidity ^0.8.19;
 import "./TokenAuthenticated.sol";
 import "./interfaces/IGnosisSafe.sol";
 
-contract EnglishOwnerAddition is TokenAuthenticated {
+contract EnglishOwnerRemover is TokenAuthenticated {
 
-    constructor() TokenAuthenticated("I authorize this device to send transactions on my behalf") {}
+    constructor() TokenAuthenticated("I want to remove this device from my account.") {}
 
-    function addOwner(
+    function removeOwner(
         address _safe,
+        address previousOwner,
         TokenRequest calldata request,
         bytes calldata signature
     ) external {
         require(authenticate(request, signature));
 
         GnosisSafe safe = GnosisSafe(_safe);
-
         {
             uint256 threshold = safe.getThreshold();
             require(
@@ -27,10 +27,12 @@ contract EnglishOwnerAddition is TokenAuthenticated {
         }
 
         bytes memory data = abi.encodeWithSignature(
-            "addOwnerWithThreshold(address,uint256)",
+            "removeOwner(address,address,uint256)",
+            previousOwner,
             request.device,
             1
         );
+
         GnosisSafe(_safe).execTransactionFromModule(
             _safe,
             0,

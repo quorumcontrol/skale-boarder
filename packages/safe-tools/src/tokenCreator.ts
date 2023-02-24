@@ -59,7 +59,7 @@ export async function createToken({ stringToSign, tokenRequest }:PreSignData, ow
   }
 }
 
-export async function getBytesAndCreateToken(walletDeployer: WalletDeployer, owner: Signer, device: Address) {
-  const preTokenData = await bytesToSignForToken(walletDeployer, await owner.getAddress(), device)
+export async function getBytesAndCreateToken(contract: TokenAuthenticatedContract, owner: Signer, device: Address) {
+  const preTokenData = await bytesToSignForToken(contract, await owner.getAddress(), device)
   return createToken(preTokenData, owner)
 }

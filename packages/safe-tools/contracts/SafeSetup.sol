@@ -3,14 +3,17 @@ pragma solidity ^0.8.19;
 import "./interfaces/IGnosisSafe.sol";
 
 contract SafeSetup {
-    address immutable ownerModule;
+    address immutable addOwnerModule;
+    address immutable removeOwnerModule;
 
-    constructor(address _ownerModule) {
-        ownerModule = _ownerModule;
+    constructor(address _addOwnerModule, address _removeOwnerModule) {
+        addOwnerModule = _addOwnerModule;
+        removeOwnerModule = _removeOwnerModule;
     }
 
     function setup() public {
         GnosisSafe safe = GnosisSafe(address(this));
-        safe.enableModule(ownerModule);
+        safe.enableModule(addOwnerModule);
+        safe.enableModule(removeOwnerModule);
     }
 }
