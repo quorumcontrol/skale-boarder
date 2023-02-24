@@ -93,12 +93,8 @@ describe("the safe SDK works", () => {
         const walletCreator = walletDeployer.connect(alice)
         const aliceDevice = signers[2]
 
-        const token = await getBytesAndCreateToken(walletDeployer, alice, aliceDevice)
-        const tx = walletCreator.createSafe({
-            owner: alice.address,
-            device: aliceDevice.address,
-            issuedAt: token.issuedAt,
-        }, token.signature)
+        const { tokenRequest, signature } = await getBytesAndCreateToken(walletDeployer, alice, aliceDevice.address)
+        const tx = walletCreator.createSafe(tokenRequest, signature)
         await expect(tx).to.not.be.reverted
 
         // const safeFactory = await SafeFactory.create({ ethAdapter, contractNetworks })
@@ -118,13 +114,9 @@ describe("the safe SDK works", () => {
             const aliceDevice = signers[2]
 
             const englishOwnerAddition = (await ethers.getContractFactory("EnglishOwnerAddition")).attach(deploys.EnglishOwnerAddition.address).connect(deployer) as EnglishOwnerAddition
-            const token = await getBytesAndCreateToken(walletDeployer, alice, aliceDevice)
+            const { tokenRequest, signature } = await getBytesAndCreateToken(walletDeployer, alice, aliceDevice.address)
 
-            const receipt = await (await (walletDeployer as WalletDeployer).createSafe({
-                owner: alice.address,
-                device: aliceDevice.address,
-                issuedAt: token.issuedAt,
-            }, token.signature)).wait()
+            const receipt = await (await (walletDeployer as WalletDeployer).createSafe(tokenRequest, signature)).wait()
 
             const proxyAddress = await proxyAddressFromReceipt(receipt, ethAdapter, contractNetworks)
 
@@ -142,15 +134,11 @@ describe("the safe SDK works", () => {
         it("can add an owner using an english signed token", async () => {
             const { englishOwnerAddition, signers, deployer, safe, walletDeployer, alice, aliceDevice } = await loadFixture(fixture)
             const newOwner = signers[3]
-            const token = await getBytesAndCreateToken(walletDeployer, alice, newOwner)
+            const { tokenRequest, signature } = await getBytesAndCreateToken(walletDeployer, alice, newOwner.address)
             const tx = englishOwnerAddition.addOwner(
                 safe.getAddress(),
-                {
-                    owner: alice.address,
-                    device: newOwner.address,
-                    issuedAt: token.issuedAt,
-                },
-                token.signature
+                tokenRequest,
+                signature
             )
             await expect(tx).to.not.be.reverted
             expect(await safe.isOwner(newOwner.address)).to.be.true

@@ -1,39 +1,34 @@
-import { WalletDeployer } from "../typechain-types"
+import { TokenAuthenticated, WalletDeployer } from "../typechain-types"
 import { BytesLike, Signer } from 'ethers'
 
 const MIN_VALID_V_VALUE = 27;
 
-export interface PreTokenData {
-  stringToSign: BytesLike
-  issuedAt: number
-  chainId: number
+type Address = string
+
+export type TokenRequest = TokenAuthenticated.TokenRequestStructOutput
+
+interface PreSignData {
+  stringToSign: string
+  tokenRequest: TokenRequest
 }
 
 export interface Token {
   signature: BytesLike
-  issuedAt: number
+  tokenRequest: TokenRequest
 }
 
-export async function bytesToSignForToken(walletDeployer: WalletDeployer, user: Signer, relayer: Signer):Promise<PreTokenData> {
-  const [statement, chainId, blockNumber] = await Promise.all([
-    walletDeployer.STATEMENT(),
-    relayer.getChainId(),
-    relayer.provider!.getBlockNumber()
-  ])
-  const issuedAt = blockNumber - 1
+interface TokenAuthenticatedContract {
+  createTokenRequest: TokenAuthenticated["createTokenRequest"]
+}
 
-  let stringToSign = statement +
-  "\n\nMy address:" +
-  (await user.getAddress()).toLowerCase() +
-  "\nDevice:" +
-  (await relayer.getAddress()).toLowerCase() +
-  "\nIssued at:" +
-  issuedAt.toString(10)
-
+export async function bytesToSignForToken(contract: TokenAuthenticatedContract, owner: Address, device: Address):Promise<PreSignData> {
+  const [tokenRequest, stringToSign] = await contract.createTokenRequest(
+    owner,
+    device,
+  )
   return {
+    tokenRequest,
     stringToSign,
-    issuedAt,
-    chainId,
   }
 }
 
@@ -54,17 +49,17 @@ export const adjustV = (signature: string): string => {
  * as they will often pop the app store if there are any extraneous requests besides the direct call to wallet connect.
  * see: https://github.com/MetaMask/metamask-mobile/pull/4167
  * @param preTokenData
- * @param user 
+ * @param owner 
  * @returns a sequence of bytes
  */
-export async function createToken({ stringToSign, issuedAt }:PreTokenData, user:Signer):Promise<Token> {
+export async function createToken({ stringToSign, tokenRequest }:PreSignData, owner:Signer):Promise<Token> {
   return {
-    signature: adjustV(await user.signMessage(stringToSign)),
-    issuedAt,
+    signature: adjustV(await owner.signMessage(stringToSign)),
+    tokenRequest,
   }
 }
 
-export async function getBytesAndCreateToken(walletDeployer: WalletDeployer, user: Signer, relayer: Signer) {
-  const preTokenData = await bytesToSignForToken(walletDeployer, user, relayer)
-  return createToken(preTokenData, user)
+export async function getBytesAndCreateToken(walletDeployer: WalletDeployer, owner: Signer, device: Address) {
+  const preTokenData = await bytesToSignForToken(walletDeployer, await owner.getAddress(), device)
+  return createToken(preTokenData, owner)
 }

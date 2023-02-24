@@ -48,12 +48,25 @@ contract TokenAuthenticated {
         return true;
     }
 
+    function createTokenRequest(
+        address owner,
+        address device
+    ) public view returns (TokenRequest memory request, string memory) {
+        request = TokenRequest({
+            owner: owner,
+            device: device,
+            issuedAt: block.number - 1
+        });
+        return (request, stringToSign(request));
+    }
+
+
     /**
      * @dev Returns the string to sign of the provided WalletCreateRequest.
      * @param request The WalletCreateRequest struct containing the owner address, device address, and issuedAt block number.
      */
     function stringToSign(
-        TokenRequest calldata request
+        TokenRequest memory request
     ) internal view returns (string memory) {
         return string(abi.encodePacked(
             STATEMENT,

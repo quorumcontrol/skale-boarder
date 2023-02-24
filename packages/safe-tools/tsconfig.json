@@ -27,5 +27,5 @@
     "outDir": "dist",
     "baseUrl": "src"
   },
-  "include": ["src", "src/**/*.json"]
+  "include": ["src", "src/**/*.json", "typechain-types"]
 }
