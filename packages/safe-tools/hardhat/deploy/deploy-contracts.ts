@@ -6,7 +6,7 @@ const deploy: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<v
   const { deployer } = await getNamedAccounts()
   const { deploy } = deployments
 
-  await deploy("GnosisSafe", {
+  const safe = await deploy("GnosisSafe", {
     contract: "@gnosis.pm/safe-contracts-v1.3.0/contracts/GnosisSafe.sol:GnosisSafe",
     from: deployer,
     args: [],
@@ -14,7 +14,7 @@ const deploy: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<v
     deterministicDeployment: true
   })
 
-  await deploy("GnosisSafeProxyFactory", {
+  const factory = await deploy("GnosisSafeProxyFactory", {
     contract: "@gnosis.pm/safe-contracts-v1.3.0/contracts/proxies/GnosisSafeProxyFactory.sol:GnosisSafeProxyFactory",
     from: deployer,
     args: [],
@@ -52,7 +52,7 @@ const deploy: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<v
     deterministicDeployment: true
   })
 
-  await deploy("CompatibilityFallbackHandler", {
+  const fallback = await deploy("CompatibilityFallbackHandler", {
     from: deployer,
     args: [],
     log: true,
@@ -92,6 +92,34 @@ const deploy: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<v
     log: true,
     deterministicDeployment: true
   })
+
+
+  const englishOwnerAdder = await deploy("EnglishOwnerAddition", {
+    from: deployer,
+    args: [],
+    log: true,
+    deterministicDeployment: true,
+  })
+
+  const setupHandler = await deploy("SafeSetup", {
+    from: deployer,
+    args: [englishOwnerAdder.address],
+    log: true,
+    deterministicDeployment: true,
+  })
+
+  await deploy("WalletDeployer", {
+    from: deployer,
+    args: [
+      safe.address,
+      factory.address,
+      fallback.address,
+      setupHandler.address,
+    ],
+    log: true,
+    deterministicDeployment: true,
+  })
+
 }
 
 export default deploy

@@ -6,13 +6,6 @@
   "homepage": "https://github.com/quorumcontrol/skale-boarder#readme",
   "license": "MIT",
   "main": "index.js",
-  "directories": {
-    "lib": "lib",
-    "test": "__tests__"
-  },
-  "files": [
-    "lib"
-  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/quorumcontrol/skale-boarder.git"
@@ -34,6 +27,7 @@
     "yargs": "^17.7.1"
   },
   "devDependencies": {
+    "@openzeppelin/contracts": "^4.8.1",
     "@types/chai": "^4.3.4",
     "@types/mocha": "^10.0.1",
     "chai": "^4.3.7",
