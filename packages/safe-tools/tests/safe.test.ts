@@ -123,6 +123,7 @@ describe("the safe SDK works", () => {
         const proxyAddress = await proxyAddressFromReceipt(receipt, ethAdapter, contractNetworks)
 
         expect(await walletDeployer.ownerToSafe(alice.address)).to.equal(proxyAddress)
+        expect(await walletDeployer.safeToOwner(proxyAddress)).to.equal(alice.address)
     })
 
     describe("EnglishOwnerAdder", () => {
