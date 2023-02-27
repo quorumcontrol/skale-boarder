@@ -1,18 +1,16 @@
 
 import { expect } from 'chai'
-import { ContractReceipt } from 'ethers'
+import { ContractTransactionReceipt } from 'ethers'
 import { deployments, ethers } from 'hardhat'
 import EthersAdapter from '@safe-global/safe-ethers-lib'
-import Safe, { SafeFactory } from '@safe-global/safe-core-sdk'
-import { SafeAccountConfig } from '../safe-core-sdk/packages/safe-core-sdk/src'
-import { ContractNetworksConfig } from '@safe-global/safe-core-sdk/dist/src/types'
+import Safe, { SafeFactory, SafeAccountConfig, ContractNetworksConfig } from '@safe-global/safe-core-sdk'
 import { getBytesAndCreateToken } from '../src/tokenCreator'
 import { EnglishOwnerAdder, EnglishOwnerRemover, WalletDeployer } from '../typechain-types'
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers"
 
 describe("the safe SDK works", () => {
     const setupTest = deployments.createFixture(
-        async ({ deployments, getNamedAccounts, ethers }, options) => {
+        async ({ deployments, getNamedAccounts, ethers }) => {
             await deployments.fixture(); // ensure you start from a fresh deployments
             const deploys = await deployments.all()
 
@@ -62,7 +60,7 @@ describe("the safe SDK works", () => {
         expect(await safe.isOwner(deployer.address)).to.be.true
     })
 
-    async function proxyAddressFromReceipt(receipt: ContractReceipt, ethAdapter: EthersAdapter, contractNetworks: ContractNetworksConfig) {
+    async function proxyAddressFromReceipt(receipt: ContractTransactionReceipt, ethAdapter: EthersAdapter, contractNetworks: ContractNetworksConfig) {
         const proxyContract = ethAdapter.getSafeProxyFactoryContract({
             safeVersion: "1.3.0",
             chainId: await ethAdapter.getChainId(),
