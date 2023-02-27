@@ -1,5 +1,5 @@
 {
-  "name": "safe-tools",
+  "name": "@skaleboarder/safe-tools",
   "version": "0.0.1",
   "description": "tools to interact with gnosis safe on sChains",
   "author": "Topper Bowers <topper@toppingdesign.com>",
@@ -10,7 +10,7 @@
     "type": "git",
     "url": "git+https://github.com/quorumcontrol/skale-boarder.git"
   },
-  "files": ["dist"],
+  "files": ["dist", "contracts", "artifacts"],
   "scripts": {
     "local": "hardhat deploy",
     "test": "hardhat test",

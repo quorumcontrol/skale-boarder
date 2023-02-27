@@ -2,3 +2,5 @@ cache
 artifacts
 typechain-types
 dist
+deployments/localhost
+deployments/hardhat
