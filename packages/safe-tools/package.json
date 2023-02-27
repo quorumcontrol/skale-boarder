@@ -5,14 +5,16 @@
   "author": "Topper Bowers <topper@toppingdesign.com>",
   "homepage": "https://github.com/quorumcontrol/skale-boarder#readme",
   "license": "MIT",
-  "main": "index.js",
+  "main": "dist/index.js",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/quorumcontrol/skale-boarder.git"
   },
+  "files": ["dist"],
   "scripts": {
     "local": "hardhat deploy",
-    "test": "hardhat test"
+    "test": "hardhat test",
+    "build": "tsc -P tsconfig.build.json"
   },
   "bugs": {
     "url": "https://github.com/quorumcontrol/skale-boarder/issues"

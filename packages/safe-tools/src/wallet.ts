@@ -1,4 +1,4 @@
-import { ContractNetworksConfig } from '@safe-global/safe-core-sdk/dist/src/types'
+import { ContractNetworksConfig  } from '@safe-global/safe-core-sdk'
 import EthersAdapter from '@safe-global/safe-ethers-lib'
 import { providers, Signer, ethers, BigNumber } from 'ethers'
 import { getBytesAndCreateToken } from './tokenCreator'
@@ -6,8 +6,11 @@ import { WalletDeployer, WalletDeployer__factory } from '../typechain-types'
 import SimpleSyncher from './singletonQueue'
 import Safe from '@safe-global/safe-core-sdk'
 import { Deferrable } from "@ethersproject/properties";
-import { OperationType } from '../safe-core-sdk/packages/safe-core-sdk-types/src'
 
+enum OperationType {
+    Call, // 0
+    DelegateCall // 1
+  }
 
 const KEY_FOR_PRIVATE_KEY = 'safe-relayer-pk'
 

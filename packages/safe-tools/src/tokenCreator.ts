@@ -1,4 +1,4 @@
-import { TokenAuthenticated, WalletDeployer } from "../typechain-types"
+import { TokenAuthenticated } from "../typechain-types"
 import { BytesLike, Signer } from 'ethers'
 
 const MIN_VALID_V_VALUE = 27;

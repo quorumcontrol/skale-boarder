@@ -1,3 +1,4 @@
+import 'hardhat-deploy'
 import { DeployFunction } from 'hardhat-deploy/types'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 
@@ -92,7 +93,6 @@ const deploy: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<v
     log: true,
     deterministicDeployment: true
   })
-
 
   const englishOwnerAdder = await deploy("EnglishOwnerAdder", {
     from: deployer,
