@@ -76,7 +76,7 @@ const config: HardhatUserConfig = {
     }
   },
   typechain: {
-    externalArtifacts: ['gnosis-safe-artifacts/**/*[^dbg].json'],
+    externalArtifacts: ['gnosis-safe-artifacts/!(*build-info*)/**/!(*dbg*).json'],
   },
   external: {
     contracts: [
