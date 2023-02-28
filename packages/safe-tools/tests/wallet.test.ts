@@ -2,7 +2,7 @@ import { ContractNetworksConfig } from "@safe-global/safe-core-sdk";
 import { expect } from "chai";
 import { deployments, ethers } from "hardhat";
 import { SafeRelayer } from "../src/wallet";
-import { GnosisSafeL2__factory } from "../typechain-types";
+const { providers, Wallet } = ethers
 
 class MemoryLocalStorage {
     private store: { [key: string]: string } = {}
@@ -79,11 +79,23 @@ describe("SafeWrapper", () => {
     });
 
     it("reverts correctly", async () => {
-        const { relayer, signers, testContract, contractNetworks, chainId } = await setupTest()
+        const { relayer, signers, testContract } = await setupTest()
         
         await relayer.setSigner(signers[1])
         const wrapped = relayer.wrappedSigner()
         const tx = testContract.connect(wrapped).echo("hi", true, { gasLimit: 1000000, gasPrice: 100 })
         await expect(tx).to.be.reverted
     });
+
+    it('executes reads on the target chain instead of the original signer chain', async () => {
+        const { relayer, signers, testContract } = await setupTest()
+        // first create a default polygon chain signer
+        const provider = new providers.StaticJsonRpcProvider("https://polygon-rpc.com")
+        const signer = Wallet.createRandom().connect(provider)
+
+        await relayer.setSigner(signers[1])
+        const wrapped = relayer.wrappedSigner()
+        expect(await testContract.connect(wrapped).somethingToRead()).to.equal("helloWorld")
+
+    })
 })

@@ -5,6 +5,8 @@ contract TestContract {
 
     event EchoEvent(address indexed sender, string message);
 
+    string public somethingToRead = "helloWorld";
+
     function echo(string memory message, bool revertMessage) external {
         emit EchoEvent(msg.sender, message);
         if (revertMessage) {
