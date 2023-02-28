@@ -1,4 +1,4 @@
-import { ContractNetworksConfig  } from '@safe-global/safe-core-sdk'
+import { ContractNetworksConfig } from '@safe-global/safe-core-sdk'
 import EthersAdapter from '@safe-global/safe-ethers-lib'
 import { providers, Signer, ethers, BigNumber } from 'ethers'
 import { getBytesAndCreateToken } from './tokenCreator'
@@ -13,7 +13,7 @@ const GnosisSafeInterface = GnosisSafeL2__factory.createInterface()
 enum OperationType {
     Call, // 0
     DelegateCall // 1
-  }
+}
 
 const KEY_FOR_PRIVATE_KEY = 'safe-relayer-pk'
 
@@ -88,63 +88,74 @@ export class SafeRelayer {
         }
         const handler = {
             get: (originalSigner: Signer, prop: string, _receiver: Signer) => {
-                if (prop === 'sendTransaction') {
-                    return async (transaction: Deferrable<providers.TransactionRequest>) => {
-                        return this.singleton.push(async () => {
-                            if (!this.safe) {
-                                throw new Error('No safe set')
-                            }
-                            try {
-                                const populated = await originalSigner.populateTransaction(transaction)    
-                                const safe = await this.safe
-                                const tx = await safe.createTransaction({
-                                    safeTransactionData: {
-                                        to: populated.to!,
-                                        value: populated.value?.toString() || "0x0",
-                                        data: populated.data?.toString() || '0x',
-                                        operation: OperationType.Call,
-                                    },
-                                    options: {
-                                        safeTxGas: populated.gasLimit ? BigNumber.from(populated.gasLimit).toNumber() : undefined,
-                                        gasPrice: populated.gasPrice ? BigNumber.from(populated.gasPrice).toNumber() : undefined,
-                                    }
-                                })
-                                const signed = await safe.signTransaction(tx)
-                                const executionResponse = await safe.executeTransaction(signed)
-                                const transactionResponse = executionResponse.transactionResponse
-                                if (!transactionResponse) {
-                                    throw new Error("no transaction response")
+                //TODO: do we need to support other methods like getBalance, etc?
+                switch (prop) {
+                    case "estimateGas":
+                        return async (transaction: Deferrable<providers.TransactionRequest>) => {
+                            return this.provider.estimateGas(transaction)
+                        }
+                    case "call":
+                        return async (transaction: Deferrable<providers.TransactionRequest>) => {
+                            return this.provider.call(transaction)
+                        }
+                    case "sendTransaction":
+                        return async (transaction: Deferrable<providers.TransactionRequest>) => {
+                            return this.singleton.push(async () => {
+                                if (!this.safe) {
+                                    throw new Error('No safe set')
                                 }
-                                const originalWait = transactionResponse.wait
-                                transactionResponse.wait = async (confirmations?: number):Promise<ethers.ContractReceipt> => {
-                                    const receipt = await originalWait(confirmations)
-
-                                    // purposely *removing* the SUCCESS_TOPIC so that the transaction looks *just* like a normal transaction
-                                    const lastLog = receipt.logs.pop()
-                                    if (lastLog?.topics[0] === SUCCESS_TOPIC) {
-                                        // we filter out any logs belonging to the proxy itself
-                                        receipt.logs = receipt.logs.filter((l) => {
-                                            try {
-                                                GnosisSafeInterface.parseLog(l)
-                                                return false
-                                            } catch {
-                                                return true
-                                            }
-                                        })
-                                        return receipt
+                                try {
+                                    const populated = await originalSigner.populateTransaction(transaction)
+                                    const safe = await this.safe
+                                    const tx = await safe.createTransaction({
+                                        safeTransactionData: {
+                                            to: populated.to!,
+                                            value: populated.value?.toString() || "0x0",
+                                            data: populated.data?.toString() || '0x',
+                                            operation: OperationType.Call,
+                                        },
+                                        options: {
+                                            safeTxGas: populated.gasLimit ? BigNumber.from(populated.gasLimit).toNumber() : undefined,
+                                            gasPrice: populated.gasPrice ? BigNumber.from(populated.gasPrice).toNumber() : undefined,
+                                        }
+                                    })
+                                    const signed = await safe.signTransaction(tx)
+                                    const executionResponse = await safe.executeTransaction(signed)
+                                    const transactionResponse = executionResponse.transactionResponse
+                                    if (!transactionResponse) {
+                                        throw new Error("no transaction response")
                                     }
-                                    throw new Error("transaction failed")
-                                }
+                                    const originalWait = transactionResponse.wait
+                                    transactionResponse.wait = async (confirmations?: number): Promise<ethers.ContractReceipt> => {
+                                        const receipt = await originalWait(confirmations)
 
-                                return transactionResponse
-                            } catch (err) {
-                                // console.error("error creating transaction: ", err)
-                                throw err
-                            }
-                        })
-                    }
+                                        // purposely *removing* the SUCCESS_TOPIC so that the transaction looks *just* like a normal transaction
+                                        const lastLog = receipt.logs.pop()
+                                        if (lastLog?.topics[0] === SUCCESS_TOPIC) {
+                                            // we filter out any logs belonging to the proxy itself
+                                            receipt.logs = receipt.logs.filter((l) => {
+                                                try {
+                                                    GnosisSafeInterface.parseLog(l)
+                                                    return false
+                                                } catch {
+                                                    return true
+                                                }
+                                            })
+                                            return receipt
+                                        }
+                                        throw new Error("transaction failed")
+                                    }
+
+                                    return transactionResponse
+                                } catch (err) {
+                                    // console.error("error creating transaction: ", err)
+                                    throw err
+                                }
+                            })
+                        }
+                    default:
+                        return (originalSigner as any)[prop]
                 }
-                return (originalSigner as any)[prop]
             }
         }
         this._wrappedSigner = new Proxy(this.originalSigner!, handler)
