@@ -6,6 +6,9 @@ import { WalletDeployer, WalletDeployer__factory } from '../typechain-types'
 import SimpleSyncher from './singletonQueue'
 import Safe from '@safe-global/safe-core-sdk'
 import { Deferrable } from "@ethersproject/properties";
+import { GnosisSafeL2__factory } from '../typechain-types'
+
+const GnosisSafeInterface = GnosisSafeL2__factory.createInterface()
 
 enum OperationType {
     Call, // 0
@@ -115,9 +118,19 @@ export class SafeRelayer {
                                 const originalWait = transactionResponse.wait
                                 transactionResponse.wait = async (confirmations?: number):Promise<ethers.ContractReceipt> => {
                                     const receipt = await originalWait(confirmations)
+
                                     // purposely *removing* the SUCCESS_TOPIC so that the transaction looks *just* like a normal transaction
                                     const lastLog = receipt.logs.pop()
                                     if (lastLog?.topics[0] === SUCCESS_TOPIC) {
+                                        // we filter out any logs belonging to the proxy itself
+                                        receipt.logs = receipt.logs.filter((l) => {
+                                            try {
+                                                GnosisSafeInterface.parseLog(l)
+                                                return false
+                                            } catch {
+                                                return true
+                                            }
+                                        })
                                         return receipt
                                     }
                                     throw new Error("transaction failed")
@@ -125,7 +138,7 @@ export class SafeRelayer {
 
                                 return transactionResponse
                             } catch (err) {
-                                console.error("error creating transaction: ", err)
+                                // console.error("error creating transaction: ", err)
                                 throw err
                             }
                         })

@@ -1,9 +1,10 @@
 {
   "name": "root",
   "private": true,
-  "workspaces": [
-    "packages/*"
-  ],
+  "workspaces": {
+    "packages": ["packages/*"],
+    "nohoist": ["demo-contracts/@skaleboarder/safe-tools", "demo-contracts/@skaleboarder/safe-tools/**"]
+  },
   "devDependencies": {
     "lerna": "^6.4.1"
   }

@@ -75,10 +75,13 @@ const config: HardhatUserConfig = {
       url: `https://goerli.infura.io/v3/${INFURA_KEY}`,
     }
   },
+  typechain: {
+    externalArtifacts: ['gnosis-safe-artifacts/**/*[^dbg].json'],
+  },
   external: {
     contracts: [
       {
-        artifacts: 'safe-core-sdk/packages/safe-core-sdk/artifacts',
+        artifacts: 'gnosis-safe-artifacts',
       }
     ]
   },

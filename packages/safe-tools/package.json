@@ -10,7 +10,11 @@
     "type": "git",
     "url": "git+https://github.com/quorumcontrol/skale-boarder.git"
   },
-  "files": ["dist", "contracts", "artifacts"],
+  "files": [
+    "dist",
+    "contracts",
+    "artifacts"
+  ],
   "scripts": {
     "local": "hardhat deploy",
     "test": "hardhat test",

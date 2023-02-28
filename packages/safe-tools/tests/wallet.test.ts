@@ -1,9 +1,8 @@
 import { ContractNetworksConfig } from "@safe-global/safe-core-sdk";
 import { expect } from "chai";
 import { deployments, ethers } from "hardhat";
-import EthersAdapter from "@safe-global/safe-ethers-lib";
 import { SafeRelayer } from "../src/wallet";
-import { Gnosis_safe__factory } from "@safe-global/safe-ethers-lib/dist/typechain/src/ethers-v5/v1.3.0/factories/Gnosis_safe__factory";
+import { GnosisSafeL2__factory } from "../typechain-types";
 
 class MemoryLocalStorage {
     private store: { [key: string]: string } = {}
@@ -75,12 +74,6 @@ describe("SafeWrapper", () => {
         const tx = await testContract.connect(wrapped).echo("hi", false)
         const receipt = await tx.wait()
         
-        // const adapter = new EthersAdapter({
-        //     ethers,
-        //     signerOrProvider: signers[0]
-        // })
-        // console.log(Gnosis_safe__factory.createInterface().parseLog(receipt.events![receipt.events!.length - 1 ]))
-
         expect(receipt.events?.length).to.equal(1)
         expect((receipt.events![0] as any).args.sender).to.equal((await relayer.safe)!.getAddress())
     });

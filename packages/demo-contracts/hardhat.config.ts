@@ -6,15 +6,15 @@ const config: HardhatUserConfig = {
   defaultNetwork: "hardhat",
   solidity: "0.8.17",
   external: {
-    contracts: [
-      {
-        artifacts: ["@skaleboarder/safe-tools/artifacts"]
-      }
-    ],
-    deployments: {
-      hardhat: ["@skaleboarder/safe-tools/dist/hardhat/deploy"],
-      localhost: ["@skaleboarder/safe-tools/dist/hardhat/deploy"],
-    }
+    contracts: [{
+      artifacts: ["../../node_modules/@skaleboarder/safe-tools/artifacts", "../../node_modules/**"],
+      deploy: "../../node_modules/@skaleboarder/safe-tools/hardhat/deploy",
+    }],
+  },
+  namedAccounts: {
+    deployer: {
+      default: 0,
+    },
   }
 };
 
