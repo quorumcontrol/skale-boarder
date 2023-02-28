@@ -7,7 +7,7 @@ const config: HardhatUserConfig = {
   solidity: "0.8.17",
   external: {
     contracts: [{
-      artifacts: ["../../node_modules/@skaleboarder/safe-tools/artifacts", "../../node_modules/**"],
+      artifacts: ["../../node_modules/@skaleboarder/safe-tools/artifacts", "../../node_modules/@skaleboarder/safe-tools/gnosis-safe-artifacts"],
       deploy: "../../node_modules/@skaleboarder/safe-tools/hardhat/deploy",
     }],
   },
