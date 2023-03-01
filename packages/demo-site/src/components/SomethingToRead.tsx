@@ -21,7 +21,7 @@ const SomethingToRead: React.FC = () => {
             <Box>
                 <Heading>Something To Read</Heading>
                 <Text>{address}</Text>
-                <Text>Read: {(data as unknown as BigNumber).toNumber()}</Text>
+                <Text>Read: {(data as unknown as BigNumber)?.toNumber()}</Text>
                 <Text>Error: {isError.toString()}</Text>
                 <Text>isLoading: {isLoading.toString()}</Text>
             </Box>

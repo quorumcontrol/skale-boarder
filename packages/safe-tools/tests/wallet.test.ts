@@ -49,6 +49,7 @@ describe("SafeWrapper", () => {
             const relayer = new SafeRelayer({
                 ethers,
                 walletDeployerAddress: walletDeployer.address,
+                EnglishOwnerAdderAddress: deploys.EnglishOwnerAdder.address,
                 networkConfig: contractNetworks,
                 provider: deployer.provider!,
                 localStorage: new MemoryLocalStorage(),

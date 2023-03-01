@@ -2,7 +2,7 @@ import { ContractNetworksConfig } from '@safe-global/safe-core-sdk'
 import EthersAdapter from '@safe-global/safe-ethers-lib'
 import { providers, Signer, ethers, BigNumber } from 'ethers'
 import { getBytesAndCreateToken } from './tokenCreator'
-import { WalletDeployer, WalletDeployer__factory } from '../typechain-types'
+import { EnglishOwnerAdder, EnglishOwnerAdder__factory, WalletDeployer, WalletDeployer__factory } from '../typechain-types'
 import SimpleSyncher from './singletonQueue'
 import Safe from '@safe-global/safe-core-sdk'
 // import { Deferrable } from "@ethersproject/properties";
@@ -30,6 +30,7 @@ interface LocalStorage {
 interface UserRelayerProps {
     ethers: typeof ethers
     walletDeployerAddress: Address
+    EnglishOwnerAdderAddress: Address
     networkConfig: ContractNetworksConfig
     provider: providers.Provider
     localStorage: LocalStorage
@@ -39,19 +40,20 @@ interface UserRelayerProps {
 export class SafeRelayer {
     private config: UserRelayerProps
     private ethAdapter: EthersAdapter
-    originalSigner?: Signer
     private walletDeployer: WalletDeployer
+    private englishAdder: EnglishOwnerAdder
+    private _wrappedSigner?: Signer
+
     localRelayer: Signer
     singleton: SimpleSyncher
-
+    originalSigner?: Signer
     safe?: Promise<Safe>
-
-    private _wrappedSigner?: Signer
 
     constructor(config: UserRelayerProps) {
         this.config = config
         this.localRelayer = this.findOrCreateLocalRelayer()
         this.walletDeployer = WalletDeployer__factory.connect(config.walletDeployerAddress, this.localRelayer)
+        this.englishAdder = EnglishOwnerAdder__factory.connect(config.EnglishOwnerAdderAddress, this.localRelayer)
         this.ethAdapter = new EthersAdapter({
             ethers: ethers,
             signerOrProvider: this.localRelayer,
@@ -76,104 +78,12 @@ export class SafeRelayer {
         return this.setupSigner()
     }
 
-    // async sendTransaction(transaction: Deferrable<TransactionRequest>): Promise<TransactionResponse> {
-    //     this._checkProvider("sendTransaction");
-    //     const tx = await this.populateTransaction(transaction);
-    //     const signedTx = await this.signTransaction(tx);
-    //     return await this.provider.sendTransaction(signedTx);
-    // }
-
     wrappedSigner() {
         if (this._wrappedSigner) {
             return this._wrappedSigner
         }
         this._wrappedSigner = new SafeSigner(this)
         return this._wrappedSigner
-        // const handler = {
-        //     get: (originalSigner: Signer, prop: string, _receiver: Signer) => {
-        //         //TODO: do we need to support other methods like getBalance, etc?
-        //         switch (prop) {
-        //             case "signTransaction":
-        //                 console.log("sign transaction called")
-        //                 return originalSigner.signTransaction.bind(originalSigner)
-        //             case "estimateGas":
-        //                 return async (transaction: Deferrable<providers.TransactionRequest>) => {
-        //                     return this.provider.estimateGas(transaction)
-        //                 }
-        //             case "call":
-        //                 return async (transaction: Deferrable<providers.TransactionRequest>) => {
-        //                     return this.provider.call(transaction)
-        //                 }
-        //             case "sendTransaction":
-        //                 return async (transaction: Deferrable<providers.TransactionRequest>) => {
-        //                     console.log("send transaction")
-        //                     return this.singleton.push(async () => {
-        //                         if (!this.safe) {
-        //                             throw new Error('No safe set')
-        //                         }
-        //                         try {
-        //                             const populated = await originalSigner.populateTransaction(transaction)
-        //                             const safe = await this.safe
-        //                             const tx = await safe.createTransaction({
-        //                                 safeTransactionData: {
-        //                                     to: populated.to!,
-        //                                     value: populated.value?.toString() || "0x0",
-        //                                     data: populated.data?.toString() || '0x',
-        //                                     operation: OperationType.Call,
-        //                                 },
-        //                                 options: {
-        //                                     safeTxGas: populated.gasLimit ? BigNumber.from(populated.gasLimit).toNumber() : undefined,
-        //                                     gasPrice: populated.gasPrice ? BigNumber.from(populated.gasPrice).toNumber() : undefined,
-        //                                 }
-        //                             })
-        //                             const signed = await safe.signTransaction(tx)
-        //                             const executionResponse = await safe.executeTransaction(signed)
-        //                             const transactionResponse = executionResponse.transactionResponse
-        //                             if (!transactionResponse) {
-        //                                 throw new Error("no transaction response")
-        //                             }
-        //                             const originalWait = transactionResponse.wait
-        //                             transactionResponse.wait = async (confirmations?: number): Promise<ethers.ContractReceipt> => {
-        //                                 const receipt = await originalWait(confirmations)
-
-        //                                 // purposely *removing* the SUCCESS_TOPIC so that the transaction looks *just* like a normal transaction
-        //                                 const lastLog = receipt.logs.pop()
-        //                                 if (lastLog?.topics[0] === SUCCESS_TOPIC) {
-        //                                     // we filter out any logs belonging to the proxy itself
-        //                                     receipt.logs = receipt.logs.filter((l) => {
-        //                                         try {
-        //                                             GnosisSafeInterface.parseLog(l)
-        //                                             return false
-        //                                         } catch {
-        //                                             return true
-        //                                         }
-        //                                     })
-        //                                     return receipt
-        //                                 }
-        //                                 throw new Error("transaction failed")
-        //                             }
-
-        //                             return transactionResponse
-        //                         } catch (err) {
-        //                             // console.error("error creating transaction: ", err)
-        //                             throw err
-        //                         }
-        //                     })
-        //                 }
-        //             default:
-        //                 const original = (originalSigner as any)[prop]
-        //                 console.log("originalSigner prop: ", prop, original)
-        //                 if (typeof original === "function") {
-        //                     return (...args: any[]) => {
-        //                         return original.apply(originalSigner, args)
-        //                     }
-        //                 }
-        //                 return original
-        //         }
-        //     }
-        // }
-        // this._wrappedSigner = new Proxy(this.originalSigner!, handler)
-        // return this._wrappedSigner
     }
 
     private findOrCreateLocalRelayer() {
@@ -202,6 +112,36 @@ export class SafeRelayer {
             console.error("error creating safe: ", err)
             throw err
         }
+    }
+
+    private async maybeAddDevice() {
+        return this.singleton.push(async () => {
+            if (!this.originalSigner) {
+                throw new Error('No signer set')
+            }
+            if (!this.safe) {
+                throw new Error("safe mmust be defined")
+            }
+            try {
+                const safe = await this.safe
+                const safeAddr = safe.getAddress()
+                const device = await this.localRelayer.getAddress()
+                if (await safe.isOwner(device)) {
+                    return
+                }
+                // then we need to create a new safe
+                const { tokenRequest, signature } = await getBytesAndCreateToken(this.englishAdder, this.originalSigner, device)
+                const tx = await this.englishAdder.addOwner(
+                    safeAddr,
+                    tokenRequest,
+                    signature
+                )
+                return tx.wait()
+            } catch (err) {
+                console.error("error adding device: ", err)
+                throw err
+            }
+        })
     }
 
     private async setupSigner() {
@@ -233,5 +173,6 @@ export class SafeRelayer {
                 throw err
             }
         })
+        return this.maybeAddDevice()
     }
 }
