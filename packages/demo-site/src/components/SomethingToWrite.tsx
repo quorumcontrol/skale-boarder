@@ -1,4 +1,4 @@
-import { Box, Button, Heading, Text } from "@chakra-ui/react"
+import { Box, Button, Heading, Text, VStack } from "@chakra-ui/react"
 import { useAccount, useContractRead, useContractWrite, usePrepareContractWrite } from "wagmi"
 import addresses from "../addresses.json"
 import ClientOnly from "./ClientOnly"
@@ -20,12 +20,12 @@ const SomethingToWrite: React.FC = () => {
     }
     return (
         <ClientOnly>
-            <Box>
-                <Heading>Something To Write</Heading>
+            <VStack>
+                <Heading size="md">Write Contracts</Heading>
                 <Button disabled={!write} onClick={() => write?.()}>Increment</Button>
-                {isLoading && <div>Check Wallet</div>}
+                {isLoading && <div>Sending Transaction...</div>}
                 {isSuccess && <div>Transaction: {JSON.stringify(data)}</div>}
-            </Box>
+            </VStack>
         </ClientOnly>
     )
 }

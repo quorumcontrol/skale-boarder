@@ -22,7 +22,7 @@ const { chains, provider } = configureChains(
   [
     jsonRpcProvider({
       rpc: (chain) => ({
-        http: `http://127.0.0.1:8545`,
+        http: `http://localhost:8545`,
       }),
     }),
   ]

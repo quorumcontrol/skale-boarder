@@ -18,7 +18,7 @@ class MemoryLocalStorage {
     }
 }
 
-const provider = new providers.StaticJsonRpcProvider("http://127.0.0.1:8545/")
+const provider = new providers.StaticJsonRpcProvider("http://localhost:8545/")
 
 const contractNetworks = {
     [chainId]: {
@@ -34,6 +34,7 @@ const contractNetworks = {
 
 const relayer = new SafeRelayer({
     ethers,
+    EnglishOwnerAdderAddress: contracts.EnglishOwnerAdder.address,
     walletDeployerAddress: contracts.WalletDeployer.address,
     networkConfig: contractNetworks,
     provider: provider,
@@ -79,18 +80,6 @@ const wrapConnector = (connector: Connector) => {
     const proxy = new Proxy(connector, {
         get: (target, prop) => {
             switch (prop) {
-                // case "_wallets":
-                //     console.log("calling wallets, ", (target as any)._wallets)
-                //     const originalWallets:WalletInstance[] | undefined = (target as any)._wallets
-                //     // return originalWallets
-                //     if (!originalWallets) {
-                //         return originalWallets
-                //     }
-
-                //     return originalWallets.map((wallet: WalletInstance) => {
-                //         wallet.connector = wrapConnector(wallet.connector)
-                //         return wallet
-                //     })
                 case "getProvider":
                     console.log('get provider: ', provider)
                     return async () => {

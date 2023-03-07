@@ -79,7 +79,7 @@ describe("the safe SDK works", () => {
             }
         )
         if (!proxyCreationEvent || !proxyCreationEvent.args) {
-            console.log(proxyCreationEvent, proxyCreationEvent?.args)
+            console.error(proxyCreationEvent, proxyCreationEvent?.args)
             throw new Error('SafeProxy was not deployed correctly')
         }
         return proxyCreationEvent.args[0]

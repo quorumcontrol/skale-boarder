@@ -70,11 +70,11 @@ contract TokenAuthenticated {
     ) internal view returns (string memory) {
         return string(abi.encodePacked(
             STATEMENT,
-            "\n\nMy address:",
+            "\n\nMe: ",
             Strings.toHexString(request.owner),
-            "\nDevice:",
+            "\nDevice: ",
             Strings.toHexString(request.device),
-            "\nIssued at:",
+            "\nIssued at: ",
             Strings.toString(request.issuedAt)
         ));
     }

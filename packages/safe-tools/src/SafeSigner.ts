@@ -49,13 +49,16 @@ export class SafeSigner extends Signer {
     }
 
     async sendTransaction(transaction: Deferrable<providers.TransactionRequest>) {
-        console.log("send transaction")
+        // console.log("send transaction", transaction.nonce)
         return this.relayer.singleton.push(async () => {
             if (!this.relayer.safe) {
+                console.error("no safe yet")
                 throw new Error('No safe set')
             }
             try {
+                // console.log("populating")
                 const populated = await this.relayer.originalSigner!.populateTransaction(transaction)
+                // console.log("executing transaction", populated.nonce)
                 const safe = await this.relayer.safe
                 const tx = await safe.createTransaction({
                     safeTransactionData: {

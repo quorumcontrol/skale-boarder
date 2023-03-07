@@ -123,12 +123,17 @@ export class SafeRelayer {
                 throw new Error("safe mmust be defined")
             }
             try {
+                // console.log("------------------maybe add device", this.safe)
                 const safe = await this.safe
+                // console.log("---------- safe", safe)
                 const safeAddr = safe.getAddress()
                 const device = await this.localRelayer.getAddress()
+                // console.log("local relayer")
                 if (await safe.isOwner(device)) {
+                    // console.log("----------safe owner is device")
                     return
                 }
+                // console.log("fetching token")
                 // then we need to create a new safe
                 const { tokenRequest, signature } = await getBytesAndCreateToken(this.englishAdder, this.originalSigner, device)
                 const tx = await this.englishAdder.addOwner(
@@ -136,6 +141,7 @@ export class SafeRelayer {
                     tokenRequest,
                     signature
                 )
+                // console.log("-------------- add device")
                 return tx.wait()
             } catch (err) {
                 console.error("error adding device: ", err)
@@ -149,7 +155,10 @@ export class SafeRelayer {
             throw new Error('No signer set')
         }
         const addr = await this.walletDeployer.ownerToSafe(await this.originalSigner.getAddress())
-        this.singleton.push(async () => this.config.faucet(await this.localRelayer.getAddress()))
+        this.singleton.push(async () => {
+            // console.log("------- faucet")
+            return this.config.faucet(await this.localRelayer.getAddress())
+        })
 
         if (addr === ethers.constants.AddressZero) {
             this.singleton.push(() => this.createSafe())
@@ -157,6 +166,7 @@ export class SafeRelayer {
 
         // otherwise we just use the existing safe
         this.safe = this.singleton.push(async () => {
+            // console.log("----------creating safe")
             try {
                 if (!this.originalSigner) {
                     throw new Error('No signer set')
@@ -167,6 +177,7 @@ export class SafeRelayer {
                     safeAddress: addr,
                     contractNetworks: this.config.networkConfig,
                 })
+                // console.log("--------- safe created")
                 return safe
             } catch (err) {
                 console.error("error creating safe: ", err)
