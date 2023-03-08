@@ -1,6 +1,9 @@
 {
   "name": "@skaleboarder/safe-tools",
   "version": "0.0.0",
+  "publishConfig": {
+    "access": "public"
+  },
   "description": "tools to interact with gnosis safe on sChains",
   "author": "Topper Bowers <topper@toppingdesign.com>",
   "homepage": "https://github.com/quorumcontrol/skale-boarder#readme",
