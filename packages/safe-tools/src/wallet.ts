@@ -75,6 +75,11 @@ export class SafeRelayer {
         return this.config.provider
     }
 
+    // syntactic sugar to allow for  `await relayer.ready()` which makes
+    // more inutitive sense than `await relayer.safe`
+    get ready() {
+        return this.safe
+    }
 
     wrappedSigner() {
         if (this._wrappedSigner) {

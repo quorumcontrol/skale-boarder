@@ -51,7 +51,7 @@ describe("SafeWrapper", () => {
 
             // we need to do this within the fixture so that the safe is created before the test runs
             // and when the state is snapshotted it all works.
-            await relayer.safe!
+            await relayer.ready
 
             return { deployer, signers, walletDeployer, deploys, contractNetworks, relayer, testContract, chainId }
         }

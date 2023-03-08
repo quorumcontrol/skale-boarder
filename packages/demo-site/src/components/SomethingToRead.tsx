@@ -14,13 +14,13 @@ const SomethingToRead: React.FC = () => {
         functionName: 'counter',
     })
 
-    // useEffect(() => {
-    //     if (!isConnected) {
-    //         return
-    //     }
-    //     const interval = setInterval(refetch, 3000)
-    //     return () => clearInterval(interval)
-    // })
+    useEffect(() => {
+        if (!isConnected) {
+            return
+        }
+        const interval = setInterval(refetch, 3000)
+        return () => clearInterval(interval)
+    })
 
     if (!isConnected) {
         return null
@@ -31,6 +31,7 @@ const SomethingToRead: React.FC = () => {
                 <Heading size="md">Read contracts</Heading>
                 <Text>Counter: {(data as unknown as BigNumber)?.toNumber()}</Text>
                 <Text>isLoading: {isLoading.toString()}</Text>
+                {isError && <Text>isError: {isError.toString()}</Text>}
             </VStack>
         </ClientOnly>
     )

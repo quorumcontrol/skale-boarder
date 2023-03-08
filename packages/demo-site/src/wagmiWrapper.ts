@@ -1,4 +1,4 @@
-import { Wallet, WalletInstance } from "@rainbow-me/rainbowkit/dist/wallets/Wallet"
+import { Wallet } from "@rainbow-me/rainbowkit/dist/wallets/Wallet"
 import { SafeRelayer } from "@skaleboarder/safe-tools"
 import { providers, ethers, Signer } from "ethers"
 import { Connector } from "wagmi"
@@ -32,22 +32,27 @@ const contractNetworks = {
     }
 }
 
-const relayer = new SafeRelayer({
-    ethers,
-    EnglishOwnerAdderAddress: contracts.EnglishOwnerAdder.address,
-    walletDeployerAddress: contracts.WalletDeployer.address,
-    networkConfig: contractNetworks,
-    provider: provider,
-    localStorage: typeof localStorage !== "undefined" ? localStorage : new MemoryLocalStorage(),
-    faucet: async (address: string) => {
-        // TODO: demonstrate PoW on an schain
-        const resp = await fetch("/api/localFaucet", {
-            method: "POST",
-            body: JSON.stringify({ address })
-        })
-        console.log("faucet succeeded", address, await resp.json())
-    }
-})
+const createRelayer = (signer:Signer) => {
+    return new SafeRelayer({
+        ethers,
+        signer,
+        EnglishOwnerAdderAddress: contracts.EnglishOwnerAdder.address,
+        walletDeployerAddress: contracts.WalletDeployer.address,
+        networkConfig: contractNetworks,
+        provider: provider,
+        localStorage: typeof localStorage !== "undefined" ? localStorage : undefined,
+        faucet: async (address: string) => {
+            // TODO: demonstrate PoW on an schain
+            const resp = await fetch("/api/localFaucet", {
+                method: "POST",
+                body: JSON.stringify({ address })
+            })
+            console.log("faucet succeeded", address, await resp.json())
+        }
+    })
+}
+
+
 
 const wrapWallet = (wallet: Wallet) => {
     return new Proxy(wallet, {
@@ -95,7 +100,7 @@ const wrapConnector = (connector: Connector) => {
                         signerPromise = (async () => {
                             console.log("get signer, creating new")
                             const original = await target.getSigner()
-                            await relayer.setSigner(original)
+                            const relayer = createRelayer(original)
                             console.log('returning wrapped signer')
                             return relayer.wrappedSigner()
                         })()
