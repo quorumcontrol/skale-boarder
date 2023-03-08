@@ -1,3 +1,4 @@
+import 'hardhat-deploy'
 import { DeployFunction } from 'hardhat-deploy/types'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 
@@ -7,7 +8,7 @@ const deploy: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<v
   const { deploy } = deployments
 
   const safe = await deploy("GnosisSafe", {
-    contract: "@gnosis.pm/safe-contracts-v1.3.0/contracts/GnosisSafe.sol:GnosisSafe",
+    contract: "GnosisSafeL2",
     from: deployer,
     args: [],
     log: true,
@@ -15,7 +16,6 @@ const deploy: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<v
   })
 
   const factory = await deploy("GnosisSafeProxyFactory", {
-    contract: "@gnosis.pm/safe-contracts-v1.3.0/contracts/proxies/GnosisSafeProxyFactory.sol:GnosisSafeProxyFactory",
     from: deployer,
     args: [],
     log: true,
@@ -23,7 +23,6 @@ const deploy: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<v
   })
 
   await deploy("MultiSend", {
-    contract: "@gnosis.pm/safe-contracts-v1.3.0/contracts/libraries/MultiSend.sol:MultiSend",
     from: deployer,
     args: [],
     log: true,
@@ -45,7 +44,6 @@ const deploy: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<v
   })
 
   await deploy("CreateCall", {
-    contract: "@gnosis.pm/safe-contracts-v1.3.0/contracts/libraries/CreateCall.sol:CreateCall",
     from: deployer,
     args: [],
     log: true,
@@ -59,40 +57,12 @@ const deploy: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<v
     deterministicDeployment: true
   })
 
-  await deploy('DailyLimitModule', {
-    from: deployer,
-    args: [],
-    log: true,
-    deterministicDeployment: true
-  })
-
-  await deploy('SocialRecoveryModule', {
-    from: deployer,
-    args: [],
-    log: true,
-    deterministicDeployment: true
-  })
-
-  await deploy('ERC20Mintable', {
-    from: deployer,
-    args: [],
-    log: true
-  })
-
-  await deploy('DebugTransactionGuard', {
-    from: deployer,
-    args: [],
-    log: true
-  })
-
   await deploy('DefaultCallbackHandler', {
-    contract: "@gnosis.pm/safe-contracts-v1.3.0/contracts/handler/DefaultCallbackHandler.sol:DefaultCallbackHandler",
     from: deployer,
     args: [],
     log: true,
     deterministicDeployment: true
   })
-
 
   const englishOwnerAdder = await deploy("EnglishOwnerAdder", {
     from: deployer,

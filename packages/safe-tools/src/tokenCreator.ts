@@ -1,4 +1,4 @@
-import { TokenAuthenticated, WalletDeployer } from "../typechain-types"
+import { TokenAuthenticated } from "../typechain-types"
 import { BytesLike, Signer } from 'ethers'
 
 const MIN_VALID_V_VALUE = 27;
@@ -60,6 +60,12 @@ export async function createToken({ stringToSign, tokenRequest }:PreSignData, ow
 }
 
 export async function getBytesAndCreateToken(contract: TokenAuthenticatedContract, owner: Signer, device: Address) {
-  const preTokenData = await bytesToSignForToken(contract, await owner.getAddress(), device)
-  return createToken(preTokenData, owner)
+  try {
+    const preTokenData = await bytesToSignForToken(contract, await owner.getAddress(), device)
+    return createToken(preTokenData, owner)
+  } catch (error) {
+    console.error("error creating token: ", error)
+    throw new Error('Error creating token')
+  }
+
 }

@@ -1,29 +1,34 @@
 {
-  "name": "safe-tools",
+  "name": "@skaleboarder/safe-tools",
   "version": "0.0.1",
   "description": "tools to interact with gnosis safe on sChains",
   "author": "Topper Bowers <topper@toppingdesign.com>",
   "homepage": "https://github.com/quorumcontrol/skale-boarder#readme",
   "license": "MIT",
-  "main": "index.js",
+  "main": "dist/index.js",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/quorumcontrol/skale-boarder.git"
   },
+  "files": [
+    "dist",
+    "contracts",
+    "artifacts"
+  ],
   "scripts": {
     "local": "hardhat deploy",
-    "test": "hardhat test"
+    "test": "hardhat test",
+    "build": "tsc -P tsconfig.build.json"
   },
   "bugs": {
     "url": "https://github.com/quorumcontrol/skale-boarder/issues"
   },
   "dependencies": {
     "@nomicfoundation/hardhat-toolbox": "^2.0.1",
-    "@nomiclabs/hardhat-ethers": "^2.2.2",
-    "@nomiclabs/hardhat-waffle": "^2.0.5",
     "@safe-global/safe-core-sdk": "^3.3.1",
     "@safe-global/safe-ethers-lib": "^1.9.1",
-    "ethers": "^6.0.8",
+    "@types/dotenv": "^8.2.0",
+    "ethers": "5.7.2",
     "hardhat-deploy": "^0.11.23",
     "yargs": "^17.7.1"
   },
