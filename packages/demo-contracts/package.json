@@ -1,5 +1,6 @@
 {
   "name": "demo-contracts",
+  "private": true,
   "version": "0.0.1",
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^2.0.1",

@@ -1,5 +1,6 @@
 import type { AppProps } from 'next/app'
 import { ChakraProvider } from '@chakra-ui/react'
+import ethers, { providers } from "ethers"
 import '@rainbow-me/rainbowkit/styles.css';
 import { jsonRpcProvider } from 'wagmi/providers/jsonRpc'
 import {
@@ -8,14 +9,24 @@ import {
   rainbowWallet,
   walletConnectWallet,
 } from '@rainbow-me/rainbowkit/wallets';
-
 import {
   connectorsForWallets,
   RainbowKitProvider,
 } from '@rainbow-me/rainbowkit';
 import { configureChains, createClient, WagmiConfig } from 'wagmi';
 import { mainnet, polygon, optimism, arbitrum } from 'wagmi/chains';
-import wrapWallet from '@/wagmiWrapper';
+import RainbowKitWalletWrapper from '@skaleboarder/rainbowkit';
+import addresses from "../addresses.json"
+
+
+const skaleProvider = new providers.StaticJsonRpcProvider("http://localhost:8545/")
+
+const wrapper = new RainbowKitWalletWrapper({
+    ethers,
+    provider: skaleProvider,
+    chainId: addresses.chainId,
+    deploys: addresses.contracts,
+})
 
 const { chains, provider } = configureChains(
   [mainnet, polygon, optimism, arbitrum],
@@ -36,7 +47,7 @@ const connectors = connectorsForWallets([
       // rainbowWallet({ chains }),
       // walletConnectWallet({ chains }),
       // coinbaseWallet({ appName: "Demo Skaleboarder", chains }),
-    ].map((wallet) => wrapWallet(wallet)),
+    ].map((wallet) => wrapper.wrapWallet(wallet)),
   },
 ]);
 

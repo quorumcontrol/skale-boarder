@@ -28,7 +28,7 @@ interface LocalStorage {
     setItem(key: string, value: string): void
 }
 
-interface UserRelayerProps {
+export interface UserRelayerProps {
     signer: Signer
     ethers: typeof ethers
     walletDeployerAddress: Address
@@ -57,7 +57,7 @@ export class SafeRelayer {
 
     constructor(config: UserRelayerProps) {
         this.config = config
-        this.localStorage = config.localStorage || new MemoryLocalStorage()
+        this.localStorage = this.findDefaultLocalStorage()
 
         this.localRelayer = this.findOrCreateLocalRelayer()
         this.walletDeployer = WalletDeployer__factory.connect(config.walletDeployerAddress, this.localRelayer)
@@ -87,6 +87,19 @@ export class SafeRelayer {
         }
         this._wrappedSigner = new SafeSigner(this)
         return this._wrappedSigner
+    }
+
+    private findDefaultLocalStorage() {
+        if (this.config.localStorage) {
+            return this.config.localStorage
+        }
+        if (typeof localStorage !== "undefined") {
+            return localStorage
+        }
+        if (typeof globalThis !== "undefined" && globalThis.localStorage) {
+            return globalThis.localStorage
+        }
+        return new MemoryLocalStorage()
     }
 
     private findOrCreateLocalRelayer() {

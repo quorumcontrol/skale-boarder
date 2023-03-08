@@ -1,4 +1,4 @@
-import { SafeRelayer } from "@skaleboarder/safe-tools"
+import { SafeRelayer, UserRelayerProps } from "@skaleboarder/safe-tools"
 import { providers, ethers, Signer } from "ethers"
 import { Connector } from "wagmi"
 
@@ -11,7 +11,7 @@ interface ContractDeploy {
 export interface WagmiWrapperConfig {
     ethers: typeof ethers
     provider: providers.Provider
-    chainId: number,
+    chainId: string,
     deploys: {
         GnosisSafe: ContractDeploy,
         GnosisSafeProxyFactory: ContractDeploy,
@@ -23,6 +23,7 @@ export interface WagmiWrapperConfig {
         EnglishOwnerAdder: ContractDeploy,
         WalletDeployer: ContractDeploy,
     }
+    localStorage?: UserRelayerProps["localStorage"]
 }
 
 class WagmiWrapper {
@@ -54,7 +55,7 @@ class WagmiWrapper {
             walletDeployerAddress: this.config.deploys.WalletDeployer.address,
             networkConfig: this.contractConfigs(),
             provider: this.config.provider,
-            localStorage: typeof localStorage !== "undefined" ? localStorage : undefined,
+            localStorage: this.config.localStorage,
             faucet: async (address: string) => {
                 // TODO: demonstrate PoW on an schain
                 const resp = await fetch("/api/localFaucet", {
