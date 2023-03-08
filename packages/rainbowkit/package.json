@@ -1,6 +1,6 @@
 {
   "name": "@skaleboarder/rainbowkit",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "packages to wrap rainbowkit wallets",
   "author": "Topper Bowers <topper@toppingdesign.com>",
   "homepage": "https://github.com/quorumcontrol/skale-boarder#readme",
@@ -23,7 +23,7 @@
     "typescript": "^4.9.5"
   },
   "dependencies": {
-    "@skaleboarder/wagmi": "^0.0.2"
+    "@skaleboarder/wagmi": "^0.0.3"
   },
   "peerDependencies": {
     "@rainbow-me/rainbowkit": "^0.11.0"

@@ -1,6 +1,6 @@
 {
   "name": "@skaleboarder/wagmi",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "wagmi wrappers for the skaleboarder safe tools",
   "author": "Topper Bowers <topper@toppingdesign.com>",
   "homepage": "https://github.com/quorumcontrol/skale-boarder#readme",
@@ -27,6 +27,6 @@
     "wagmi": "^0.11.0"
   },
   "dependencies": {
-    "@skaleboarder/safe-tools": "^0.0.2"
+    "@skaleboarder/safe-tools": "^0.0.3"
   }
 }
