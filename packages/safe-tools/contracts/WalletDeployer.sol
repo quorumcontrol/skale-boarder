@@ -40,7 +40,7 @@ contract WalletDeployer is TokenAuthenticated {
         address setupHandler
     )
         TokenAuthenticated(
-            "I authorize this device to send transactions on my behalf"
+            "I authorize this device to send transactions on my behalf."
         )
     {
         CHAIN_ID = Strings.toString(block.chainid);

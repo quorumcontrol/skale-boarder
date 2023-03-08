@@ -4,18 +4,6 @@ import { deployments, ethers } from "hardhat";
 import { SafeRelayer } from "../src/wallet";
 const { providers, Wallet } = ethers
 
-class MemoryLocalStorage {
-    private store: { [key: string]: string } = {}
-
-    getItem(key: string) {
-        return this.store[key]
-    }
-
-    setItem(key: string, value: string) {
-        this.store[key] = value
-    }
-}
-
 describe("SafeWrapper", () => {
     const setupTest = deployments.createFixture(
         async ({ deployments, getNamedAccounts, ethers }) => {
@@ -48,11 +36,11 @@ describe("SafeWrapper", () => {
 
             const relayer = new SafeRelayer({
                 ethers,
+                signer: signers[1],
                 walletDeployerAddress: walletDeployer.address,
                 EnglishOwnerAdderAddress: deploys.EnglishOwnerAdder.address,
                 networkConfig: contractNetworks,
                 provider: deployer.provider!,
-                localStorage: new MemoryLocalStorage(),
                 faucet: async (address: string) => {
                     await (await deployer.sendTransaction({
                         to: address,
@@ -61,16 +49,17 @@ describe("SafeWrapper", () => {
                 }
             })
 
+            // we need to do this within the fixture so that the safe is created before the test runs
+            // and when the state is snapshotted it all works.
+            await relayer.safe!
+
             return { deployer, signers, walletDeployer, deploys, contractNetworks, relayer, testContract, chainId }
         }
     );
 
-
-
     it("executes wrapped transactions", async () => {
-        const { relayer, signers, testContract, contractNetworks, chainId } = await setupTest()
+        const { relayer, testContract } = await setupTest()
         
-        await relayer.setSigner(signers[1])
         const wrapped = relayer.wrappedSigner()
         const tx = await testContract.connect(wrapped).echo("hi", false)
         const receipt = await tx.wait()
@@ -79,22 +68,73 @@ describe("SafeWrapper", () => {
         expect((receipt.events![0] as any).args.sender).to.equal((await relayer.safe)!.getAddress())
     });
 
-    it("reverts correctly", async () => {
-        const { relayer, signers, testContract } = await setupTest()
+    it("finds the same safe again with a new relayer", async () => {
+        const { relayer, signers, testContract, contractNetworks, walletDeployer, deploys, deployer } = await setupTest()
+
+        const newRelayer = new SafeRelayer({
+            ethers,
+            signer: signers[1],
+            walletDeployerAddress: walletDeployer.address,
+            EnglishOwnerAdderAddress: deploys.EnglishOwnerAdder.address,
+            networkConfig: contractNetworks,
+            provider: deployer.provider!,
+            faucet: async (address: string) => {
+                await (await deployer.sendTransaction({
+                    to: address,
+                    value: ethers.utils.parseEther("2")
+                })).wait()
+            }
+        })
+
+        const existingSafe = await relayer.safe!
         
-        await relayer.setSigner(signers[1])
+        
+        expect((await newRelayer.safe)?.getAddress()).to.equal(existingSafe.getAddress())
+
+        const wrapped = relayer.wrappedSigner()
+        await expect(testContract.connect(wrapped).echo("hi", false)).to.not.be.reverted
+    });
+
+    it('executes a transaction after a fire-and-forget setSigner', async () => {
+        const { relayer, testContract } = await setupTest()
+        
+        const wrapped = relayer.wrappedSigner()
+        const tx = await testContract.connect(wrapped).echo("hi", false)
+        const receipt = await tx.wait()
+        
+        expect(receipt.events?.length).to.equal(1)
+        expect((receipt.events![0] as any).args.sender).to.equal((await relayer.safe)!.getAddress())
+    })
+
+    it("reverts correctly", async () => {
+        const { relayer, testContract } = await setupTest()
+        
         const wrapped = relayer.wrappedSigner()
         const tx = testContract.connect(wrapped).echo("hi", true, { gasLimit: 1000000, gasPrice: 100 })
         await expect(tx).to.be.reverted
     });
 
     it('executes reads on the target chain instead of the original signer chain', async () => {
-        const { relayer, signers, testContract } = await setupTest()
+        const { testContract, walletDeployer, deploys, contractNetworks, deployer } = await setupTest()
         // first create a default polygon chain signer
         const provider = new providers.StaticJsonRpcProvider("https://polygon-rpc.com")
         const signer = Wallet.createRandom().connect(provider)
 
-        await relayer.setSigner(signers[1])
+        const relayer = new SafeRelayer({
+            ethers,
+            signer: signer,
+            walletDeployerAddress: walletDeployer.address,
+            EnglishOwnerAdderAddress: deploys.EnglishOwnerAdder.address,
+            networkConfig: contractNetworks,
+            provider: deployer.provider!,
+            faucet: async (address: string) => {
+                await (await deployer.sendTransaction({
+                    to: address,
+                    value: ethers.utils.parseEther("2")
+                })).wait()
+            }
+        })
+
         const wrapped = relayer.wrappedSigner()
         expect(await testContract.connect(wrapped).somethingToRead()).to.equal("helloWorld")
 

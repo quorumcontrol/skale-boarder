@@ -6,7 +6,7 @@ import "./interfaces/IGnosisSafe.sol";
 
 contract EnglishOwnerAdder is TokenAuthenticated {
 
-    constructor() TokenAuthenticated("I authorize this device to send transactions on my behalf") {}
+    constructor() TokenAuthenticated("I authorize this device to send transactions on my behalf.") {}
 
     function addOwner(
         address _safe,
