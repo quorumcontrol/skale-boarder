@@ -1,0 +1,32 @@
+{
+  "name": "@skaleboarder/wagmi",
+  "version": "0.0.1",
+  "description": "wagmi wrappers for the skaleboarder safe tools",
+  "author": "Topper Bowers <topper@toppingdesign.com>",
+  "homepage": "https://github.com/quorumcontrol/skale-boarder#readme",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/quorumcontrol/skale-boarder.git"
+  },
+  "scripts": {
+    "build": "tsc"
+  },
+  "bugs": {
+    "url": "https://github.com/quorumcontrol/skale-boarder/issues"
+  },
+  "devDependencies": {
+    "typescript": "^4.9.5"
+  },
+  "peerDependencies": {
+    "wagmi": "^0.11.0",
+    "ethers": "^5.0.0"
+  },
+  "dependencies": {
+    "@skaleboarder/safe-tools": "*"
+  }
+}
