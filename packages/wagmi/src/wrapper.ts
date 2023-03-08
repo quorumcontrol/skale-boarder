@@ -33,6 +33,7 @@ export class WagmiWrapper {
         this.config = config
     }
 
+    // create contract configs
     private contractConfigs() {
         return {
             [this.config.chainId]: {
