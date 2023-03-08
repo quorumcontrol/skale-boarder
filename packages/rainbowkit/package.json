@@ -23,10 +23,9 @@
     "typescript": "^4.9.5"
   },
   "dependencies": {
-    "@skaleboarder/wagmi": "*"
+    "@skaleboarder/wagmi": "^0.0.1"
   },
   "peerDependencies": {
     "@rainbow-me/rainbowkit": "^0.11.0"
   }
-  
 }
