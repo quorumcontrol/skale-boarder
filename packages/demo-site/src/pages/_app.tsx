@@ -15,7 +15,7 @@ import {
 } from '@rainbow-me/rainbowkit';
 import { configureChains, createClient, WagmiConfig } from 'wagmi';
 import { mainnet, polygon, optimism, arbitrum } from 'wagmi/chains';
-import RainbowKitWalletWrapper from '@skaleboarder/rainbowkit';
+import { RainbowKitWalletWrapper } from '@skaleboarder/rainbowkit';
 import addresses from "../addresses.json"
 
 

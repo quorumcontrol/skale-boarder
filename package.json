@@ -6,8 +6,8 @@
     "nohoist": ["demo-contracts/@skaleboarder/safe-tools", "demo-contracts/@skaleboarder/safe-tools/**"]
   },
   "scripts": {
-    "build": "lerna run build --no-private",
-    "publish": "lerna publish --no-private"
+    "prerelease": "lerna run build --no-private",
+    "release": "lerna publish --no-private"
   },
   "devDependencies": {
     "lerna": "^6.4.1"
