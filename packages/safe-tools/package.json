@@ -16,7 +16,9 @@
   "files": [
     "dist",
     "contracts",
-    "artifacts"
+    "artifacts",
+    "hardhat",
+    "typechain-types"
   ],
   "scripts": {
     "local": "hardhat deploy",
