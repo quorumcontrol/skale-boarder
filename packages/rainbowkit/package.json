@@ -29,6 +29,6 @@
     "@skaleboarder/wagmi": "^0.0.4"
   },
   "peerDependencies": {
-    "@rainbow-me/rainbowkit": "^0.11.0"
+    "@rainbow-me/rainbowkit": ">=0.11.0"
   }
 }
