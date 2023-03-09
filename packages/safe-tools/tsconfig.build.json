@@ -27,6 +27,6 @@
     "outDir": "dist",
     "baseUrl": "src"
   },
-  "include": ["src", "typechain-types"],
+  "include": ["src", "typechain-types", "hardhat"],
   "files": ["index.ts"]
 }

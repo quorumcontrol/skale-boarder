@@ -16,14 +16,13 @@
   "files": [
     "dist",
     "contracts",
-    "artifacts",
-    "hardhat",
-    "typechain-types"
+    "artifacts"
   ],
   "scripts": {
     "local": "hardhat deploy",
     "test": "hardhat test",
-    "build": "tsc -P tsconfig.build.json"
+    "build": "tsc -P tsconfig.build.json",
+    "postbuild": "rm -f dist/hardhat/deploy/*.ts && rm -f dist/hardhat/deploy/*.map"
   },
   "bugs": {
     "url": "https://github.com/quorumcontrol/skale-boarder/issues"
