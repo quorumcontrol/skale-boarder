@@ -16,7 +16,8 @@
   "files": [
     "dist",
     "contracts",
-    "artifacts"
+    "artifacts",
+    "gnosis-safe-artifacts"
   ],
   "scripts": {
     "local": "hardhat deploy",
