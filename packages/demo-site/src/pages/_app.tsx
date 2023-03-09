@@ -6,6 +6,7 @@ import { jsonRpcProvider } from 'wagmi/providers/jsonRpc'
 import {
   coinbaseWallet,
   injectedWallet,
+  metaMaskWallet,
   rainbowWallet,
   walletConnectWallet,
 } from '@rainbow-me/rainbowkit/wallets';
@@ -44,6 +45,7 @@ const connectors = connectorsForWallets([
     groupName: 'Recommended',
     wallets: [
       injectedWallet({ chains }),
+      metaMaskWallet({ chains }),
       // rainbowWallet({ chains }),
       // walletConnectWallet({ chains }),
       // coinbaseWallet({ appName: "Demo Skaleboarder", chains }),
