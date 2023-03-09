@@ -5,7 +5,7 @@
   "devDependencies": {
     "@gnosis.pm/safe-contracts-v1.3.0": "npm:@gnosis.pm/safe-contracts@v1.3.0",
     "@nomicfoundation/hardhat-toolbox": "^2.0.1",
-    "@skaleboarder/safe-tools": "^0.0.1",
+    "@skaleboarder/safe-tools": "*",
     "hardhat": "^2.12.7",
     "hardhat-deploy": "^0.11.24"
   }

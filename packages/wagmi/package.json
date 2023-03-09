@@ -30,6 +30,6 @@
     "wagmi": "^0.11.0"
   },
   "dependencies": {
-    "@skaleboarder/safe-tools": "^0.0.1"
+    "@skaleboarder/safe-tools": "*"
   }
 }
