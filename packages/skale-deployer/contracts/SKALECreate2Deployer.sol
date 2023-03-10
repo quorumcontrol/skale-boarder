@@ -34,7 +34,7 @@ contract SKALECreate2Deployer {
     configController = IConfigController(configControllerAddr);
   }
 
-  function deploy(bytes memory code, bytes32 salt) external {
+  function deploy(bytes32 salt, bytes memory code) external {
     if (!configController.isAddressWhitelisted(msg.sender)) {
       revert UnauthorizedMustBeAllowedToDeploy();
     }

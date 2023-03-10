@@ -49,7 +49,7 @@ describe("SKALECreate2Deployer", function () {
 
         const testFactory = await ethers.getContractFactory("TestContract")
 
-        await expect(SKALECreate2Deployer.connect(alice).deploy(testFactory.bytecode, defaultSalt)).to.not.be.reverted
+        await expect(SKALECreate2Deployer.connect(alice).deploy(defaultSalt, testFactory.bytecode)).to.not.be.reverted
     })
 
     it("does not deploy when not authorized", async () => {
@@ -58,7 +58,7 @@ describe("SKALECreate2Deployer", function () {
 
         const testFactory = await ethers.getContractFactory("TestContract")
 
-        await expect(SKALECreate2Deployer.connect(alice).deploy(testFactory.bytecode, defaultSalt)).to.be.revertedWithCustomError(SKALECreate2Deployer, "UnauthorizedMustBeAllowedToDeploy")
+        await expect(SKALECreate2Deployer.connect(alice).deploy(defaultSalt, testFactory.bytecode)).to.be.revertedWithCustomError(SKALECreate2Deployer, "UnauthorizedMustBeAllowedToDeploy")
     })
 
     it("deploys to the adddress that hardhat expects", async () => {
@@ -66,7 +66,7 @@ describe("SKALECreate2Deployer", function () {
         await dummyConfigController.setAllowed(alice.address, true)
 
         const testFactory = await ethers.getContractFactory("TestContract")
-        const tx = await SKALECreate2Deployer.connect(alice).deploy(testFactory.bytecode, defaultSalt)
+        const tx = await SKALECreate2Deployer.connect(alice).deploy(defaultSalt, testFactory.bytecode)
         const receipt = await tx.wait()
 
         const deployedAt = SKALECreate2Deployer.interface.parseLog(receipt.logs[0]).args.contractAddress
