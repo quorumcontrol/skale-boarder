@@ -22,7 +22,7 @@ contract SKALECreate2Deployer {
   error UnauthorizedMustBeAllowedToDeploy();
   error AlreadyInitialized();
 
-  event Deployed(address contractAddress, uint256 salt);
+  event Deployed(address contractAddress, bytes32 salt);
   IConfigController private configController;
   bool private initialized;
 
@@ -34,7 +34,7 @@ contract SKALECreate2Deployer {
     configController = IConfigController(configControllerAddr);
   }
 
-  function deploy(bytes memory code, uint256 salt) external {
+  function deploy(bytes memory code, bytes32 salt) external {
     if (!configController.isAddressWhitelisted(msg.sender)) {
       revert UnauthorizedMustBeAllowedToDeploy();
     }
