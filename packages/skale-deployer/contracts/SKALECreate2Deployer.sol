@@ -20,22 +20,21 @@ of the deployed contract.
 contract SKALECreate2Deployer {
   // Error that is thrown when msg.sender is not whitelisted
   error UnauthorizedMustBeAllowedToDeploy();
-  error AlreadyInitialized();
 
   event Deployed(address contractAddress, bytes32 salt);
   IConfigController private configController;
-  bool private initialized;
+  bool private isControlled; // useful for testing
 
-  function initialize(address configControllerAddr) external {
-    if (initialized) {
-      revert AlreadyInitialized();
+  constructor(address configControllerAddr) {
+    if (configControllerAddr == address(0)) {
+      return;
     }
-    initialized = true;
+    isControlled = true;
     configController = IConfigController(configControllerAddr);
   }
 
   function deploy(bytes32 salt, bytes memory code) external {
-    if (!configController.isAddressWhitelisted(msg.sender)) {
+    if (isControlled && !configController.isAddressWhitelisted(msg.sender)) {
       revert UnauthorizedMustBeAllowedToDeploy();
     }
     address addr;
@@ -50,9 +49,3 @@ contract SKALECreate2Deployer {
     emit Deployed(addr, salt);
   }
 }
-
-	// calldatacopy(0, 32, sub(calldatasize(), 32))
-	// 		let result := create2(callvalue(), 0, sub(calldatasize(), 32), calldataload(0))
-	// 		if iszero(result) { revert(0, 0) }
-	// 		mstore(0, result)
-	// 		return(12, 20)

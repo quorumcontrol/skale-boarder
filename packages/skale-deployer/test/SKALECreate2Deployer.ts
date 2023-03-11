@@ -35,8 +35,7 @@ describe("SKALECreate2Deployer", function () {
         await dummyConfigController.deployed()
 
         const SKALECreate2DeployerFactory = await ethers.getContractFactory("SKALECreate2Deployer");
-        const SKALECreate2Deployer = await SKALECreate2DeployerFactory.deploy();
-        SKALECreate2Deployer.initialize(dummyConfigController.address);
+        const SKALECreate2Deployer = await SKALECreate2DeployerFactory.deploy(dummyConfigController.address);
         await SKALECreate2Deployer.deployed();
 
         // Fixtures can return anything you consider useful for your tests
