@@ -8,8 +8,8 @@ async function main() {
   const signer = ethers.Wallet.createRandom().connect(originalSigner.provider!)
 
   const fundingTx = await originalSigner.sendTransaction({
-    to: "0x16581000eE9df1935703d8d83E60a9EedcFD9906",
-    value: utils.parseEther("1"),
+    to: "0x69E1796d0a08eAF5525a530f6BEaf293B5D8e279",
+    value: utils.parseEther("2"),
   })
 
   await fundingTx.wait()
@@ -28,7 +28,7 @@ async function main() {
     {
       nonce: 0,
       gasPrice: BigNumber.from(100*10**9),
-      gasLimit: populated.gasLimit,
+      gasLimit: BigNumber.from(populated.gasLimit).mul(120).div(100),
       to: populated.to,
       value: populated.value,
       data: populated.data,
@@ -52,8 +52,8 @@ async function main() {
 
   // const tx = deployed.deployTransaction
 
-  console.log("tx: ", sent)
-  console.log("signer: ", await signer.getAddress())
+  console.log("tx: ", signed)
+  console.log("signer: ", utils.parseTransaction(signed).from)
   console.log("address: ", receipt.contractAddress)
 }
 

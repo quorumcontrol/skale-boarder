@@ -42,7 +42,19 @@ describe("SKALECreate2Deployer", function () {
         const { SKALECreate2Deployer, alice } = await loadFixture(initialSetup)
 
         const testFactory = await ethers.getContractFactory("TestContract")
-        const tx = await SKALECreate2Deployer.connect(alice).deploy(defaultSalt, testFactory.bytecode)
+
+        // const functionSignature = 'deploy(bytes32,bytes)'
+
+        // // Encode the calldata
+        // const iface = new ethers.utils.Interface([functionSignature]);
+        // const encodedParams = iface.encodeFunctionData('deploy', [defaultSalt, testFactory.bytecode]);
+
+        const tx = await alice.sendTransaction({
+            to: SKALECreate2Deployer.address,
+            data: defaultSalt + testFactory.bytecode.slice(2),
+            gasLimit: 9_000_000,
+        })
+
         const receipt = await tx.wait()
 
         const deployedAt = SKALECreate2Deployer.interface.parseLog(receipt.logs[0]).args.contractAddress
