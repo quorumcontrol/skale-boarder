@@ -25,7 +25,8 @@
     "resolveJsonModule": true,
     "composite": true,
     "outDir": "dist",
-    "baseUrl": "src"
+    "baseUrl": "src",
+    "jsx": "react"
   },
   "include": ["src"],
   "files": ["index.ts"]
