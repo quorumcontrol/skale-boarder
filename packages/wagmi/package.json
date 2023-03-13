@@ -1,6 +1,6 @@
 {
   "name": "@skaleboarder/wagmi",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "publishConfig": {
     "access": "public"
   },
@@ -27,10 +27,10 @@
   },
   "peerDependencies": {
     "ethers": "^5.0.0",
-    "wagmi": ">=0.11.0",
-    "react": ">=18"
+    "react": ">=18",
+    "wagmi": ">=0.11.0"
   },
   "dependencies": {
-    "@skaleboarder/safe-tools": "^0.0.5"
+    "@skaleboarder/safe-tools": "^0.0.6"
   }
 }
