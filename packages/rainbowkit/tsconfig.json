@@ -25,7 +25,8 @@
     "resolveJsonModule": true,
     "composite": true,
     "outDir": "dist",
-    "baseUrl": "src"
+    "baseUrl": "src",
+    "jsx": "react", /* Specify JSX code generation: 'preserve', 'react-native', or 'react'. */
   },
   "include": ["src"],
   "files": ["index.ts"]

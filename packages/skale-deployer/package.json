@@ -1,5 +1,6 @@
 {
-  "name": "hardhat-project",
+  "name": "skale-deployer",
+  "private": true,
   "devDependencies": {
     "@ethersproject/abi": "^5.7.0",
     "@ethersproject/providers": "^5.7.2",
