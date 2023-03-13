@@ -8,7 +8,7 @@ async function main() {
   const signer = ethers.Wallet.createRandom().connect(originalSigner.provider!)
 
   const fundingTx = await originalSigner.sendTransaction({
-    to: "0x69E1796d0a08eAF5525a530f6BEaf293B5D8e279",
+    to: "0x1aB62e2DDa7a02923A06904413A007f8e257e0D0",
     value: utils.parseEther("2"),
   })
 
@@ -18,6 +18,7 @@ async function main() {
 
   const populated = await signer.populateTransaction(tx)
   delete populated.chainId
+
   const v = 27
   const r = ('0x2222222222222222222222222222222222222222222222222222222222222222')
   const s = ('0x2222222222222222222222222222222222222222222222222222222222222222')
@@ -27,8 +28,8 @@ async function main() {
   const signed = utils.serializeTransaction(
     {
       nonce: 0,
-      gasPrice: BigNumber.from(100*10**9),
-      gasLimit: BigNumber.from(populated.gasLimit).mul(120).div(100),
+      gasPrice: BigNumber.from(100 * 10**9),
+      gasLimit: BigNumber.from(populated.gasLimit).mul(115).div(100),
       to: populated.to,
       value: populated.value,
       data: populated.data,
