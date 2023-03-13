@@ -2,6 +2,7 @@ import { ContractNetworksConfig } from "@safe-global/safe-core-sdk";
 import { expect } from "chai";
 import { deployments, ethers } from "hardhat";
 import { SafeRelayer } from "../src/wallet";
+import { WalletDeployer__factory } from "../typechain-types";
 const { providers, Wallet } = ethers
 
 describe("SafeWrapper", () => {
@@ -27,8 +28,11 @@ describe("SafeWrapper", () => {
                     createCallAddress: deploys.CreateCall.address,
                 }
             }
+            const WalletDeployerFactory:WalletDeployer__factory = await ethers.getContractFactory("WalletDeployer")
 
-            const walletDeployer = (await ethers.getContractFactory("WalletDeployer")).attach(deploys.WalletDeployer.address).connect(deployer)
+            const walletDeployer = (WalletDeployerFactory).attach(deploys.WalletDeployer.address).connect(deployer)
+
+            expect(Buffer.from(WalletDeployerFactory.bytecode.slice(2), "hex").length).to.be.lessThan(28_000)
 
             const testContractFactory = await ethers.getContractFactory("TestContract")
             const testContract = await testContractFactory.deploy()

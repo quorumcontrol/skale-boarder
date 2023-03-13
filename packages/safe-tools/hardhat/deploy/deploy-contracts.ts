@@ -87,6 +87,7 @@ const deploy: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<v
 
   await deploy("WalletDeployer", {
     from: deployer,
+    gasLimit: 3_000_000, // this fails on sChains without an explicit gas limit
     args: [
       safe.address,
       factory.address,
