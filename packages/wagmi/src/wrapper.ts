@@ -24,6 +24,7 @@ export interface WagmiWrapperConfig {
         WalletDeployer: ContractDeploy,
     }
     localStorage?: UserRelayerProps["localStorage"]
+    faucet: UserRelayerProps["faucet"]
 }
 
 export class WagmiWrapper {
@@ -57,14 +58,7 @@ export class WagmiWrapper {
             networkConfig: this.contractConfigs(),
             provider: this.config.provider,
             localStorage: this.config.localStorage,
-            faucet: async (address: string) => {
-                // TODO: demonstrate PoW on an schain
-                const resp = await fetch("/api/localFaucet", {
-                    method: "POST",
-                    body: JSON.stringify({ address })
-                })
-                console.log("faucet succeeded", address, await resp.json())
-            }
+            faucet: this.config.faucet,
         })
     }
 
