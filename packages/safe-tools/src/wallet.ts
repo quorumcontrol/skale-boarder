@@ -1,6 +1,6 @@
 import { ContractNetworksConfig } from '@safe-global/safe-core-sdk'
 import EthersAdapter from '@safe-global/safe-ethers-lib'
-import { providers, Signer, ethers, BigNumber } from 'ethers'
+import { providers, Signer, ethers } from 'ethers'
 import { getBytesAndCreateToken } from './tokenCreator'
 import { EnglishOwnerAdder, EnglishOwnerAdder__factory, WalletDeployer, WalletDeployer__factory } from '../typechain-types'
 import SimpleSyncher from './singletonQueue'
@@ -35,7 +35,7 @@ export interface UserRelayerProps {
     EnglishOwnerAdderAddress: Address
     networkConfig: ContractNetworksConfig
     provider: providers.Provider
-    faucet: (address: Address) => Promise<void>
+    faucet: (address: Address, signer?:Signer) => Promise<void>
     localStorage?: LocalStorage
 }
 
@@ -171,7 +171,7 @@ export class SafeRelayer {
                 const originalAddr = await this.originalSigner.getAddress()
                 let addr = await this.walletDeployer.ownerToSafe(originalAddr)
                 // console.log("calling faucet")
-                await this.config.faucet(await this.localRelayer.getAddress())
+                await this.config.faucet(await this.localRelayer.getAddress(), this.localRelayer)
 
                 if (addr === ethers.constants.AddressZero) {
                     await this.createSafe()

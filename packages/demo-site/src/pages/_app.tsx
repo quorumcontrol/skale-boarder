@@ -27,6 +27,11 @@ const wrapper = new RainbowKitWalletWrapper({
     provider: skaleProvider,
     chainId: addresses.chainId,
     deploys: addresses.contracts,
+    faucet: async (address, _signer) => {
+      const resp = await fetch(`/api/faucet`, { body: JSON.stringify({ address }), method: "POST" })
+      const json = await resp.json()
+      console.log("resp: ", json)
+    },
 })
 
 const { chains, provider } = configureChains(
