@@ -57,7 +57,12 @@ export class SafeSigner extends Signer {
             }
             try {
                 // console.log("populating")
-                const populated = await this.relayer.originalSigner!.populateTransaction(transaction)
+                
+                // we want to populate the transaction from the perspective of the local relayer because
+                // the original signer is on a different network and may or may not fail on estimateGas when 
+                // the transaction will fail.
+                transaction.from = await this.relayer.localRelayer.getAddress()
+                const populated = await this.relayer.localRelayer.populateTransaction(transaction)
                 // console.log("executing transaction", populated.nonce)
                 const safe = await this.relayer.safe
                 const tx = await safe.createTransaction({
