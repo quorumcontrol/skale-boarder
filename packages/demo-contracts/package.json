@@ -2,6 +2,9 @@
   "name": "demo-contracts",
   "private": true,
   "version": "0.0.1",
+  "scripts": {
+    "addresses": "npx hardhat --network localhost deploy --export ./deployments/localhost/addresses.json"
+  },
   "devDependencies": {
     "@gnosis.pm/safe-contracts-v1.3.0": "npm:@gnosis.pm/safe-contracts@v1.3.0",
     "@nomicfoundation/hardhat-toolbox": "^2.0.1",
