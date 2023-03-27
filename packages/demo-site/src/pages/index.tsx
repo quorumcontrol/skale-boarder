@@ -1,10 +1,13 @@
 import Head from 'next/head'
 import { Text, VStack } from '@chakra-ui/react'
 import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { useSafeFromUser } from "@/components/useSafe"
 import SomethingToRead from '@/components/SomethingToRead';
 import SomethingToWrite from '@/components/SomethingToWrite';
 
 export default function Home() {
+  const { data: safe } = useSafeFromUser()
+
   return (
     <>
       <Head>
@@ -16,6 +19,7 @@ export default function Home() {
       <VStack spacing={8}>
         <Text>hi</Text>
         <ConnectButton />
+        {safe && <Text>Safe Address: {safe}</Text>}
         <SomethingToRead />
         <SomethingToWrite />
       </VStack>

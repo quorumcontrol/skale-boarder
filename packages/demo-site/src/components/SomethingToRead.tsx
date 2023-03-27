@@ -1,7 +1,7 @@
 import { Box, Heading, Text, VStack } from "@chakra-ui/react"
 import { BigNumber } from "ethers"
 import { useEffect } from "react"
-import { useAccount, useContractRead, useInfiniteQuery } from "wagmi"
+import { useAccount, useContractRead } from "wagmi"
 import addresses from "../addresses.json"
 import ClientOnly from "./ClientOnly"
 
