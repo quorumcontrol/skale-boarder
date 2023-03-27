@@ -17,6 +17,8 @@ interface IProxyFactory {
 /**
  * @title WalletDeployer
  * @dev A contract that allows a user to create a Gnosis Safe wallet by signing an English message.
+ *      It sets up a a safe by calling the SafeStetup.sol contract which adds the correct modules and the TokenRequest
+ *      device and owner as owners to the safe.
  */
 contract WalletDeployer is TokenAuthenticated {
     string public CHAIN_ID;
