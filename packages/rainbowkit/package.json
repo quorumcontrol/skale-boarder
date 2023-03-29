@@ -1,6 +1,6 @@
 {
   "name": "@skaleboarder/rainbowkit",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "publishConfig": {
     "access": "public"
   },
@@ -26,7 +26,7 @@
     "typescript": "^4.9.5"
   },
   "dependencies": {
-    "@skaleboarder/wagmi": "^0.0.9"
+    "@skaleboarder/wagmi": "^0.0.10"
   },
   "peerDependencies": {
     "@rainbow-me/rainbowkit": ">=0.11.0"
