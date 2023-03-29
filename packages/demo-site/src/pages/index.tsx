@@ -1,5 +1,5 @@
 import Head from 'next/head'
-import { Text, VStack } from '@chakra-ui/react'
+import { Box, Text, VStack, Heading } from '@chakra-ui/react'
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useSafeFromUser } from "@/components/useSafe"
 import SomethingToRead from '@/components/SomethingToRead';
@@ -16,9 +16,15 @@ export default function Home() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <VStack spacing={8}>
-        <Text>hi</Text>
-        <ConnectButton />
+      <VStack spacing={10} alignItems="left" p={10}>
+        <Heading>Demo Site for Skaleboarder</Heading>
+        <Text>
+          This is the demo site for the skalaeboarder. It uses the rainbowkit wrappers to provide an easy-to-use relayed signer for your application.
+          <br />Most of the meat of this is in the src/pages/_app.tsx file.
+        </Text>
+        <Box>
+          <ConnectButton />
+        </Box>
         {safe && <Text>Safe Address: {safe}</Text>}
         <SomethingToRead />
         <SomethingToWrite />

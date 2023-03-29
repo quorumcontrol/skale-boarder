@@ -12,8 +12,8 @@ If you're not using lerna, you can use the following instead:
 
 external: {
   contracts: [{
-    artifacts: ["../../node_modules/@skaleboarder/safe-tools/artifacts", "../../node_modules/@skaleboarder/safe-tools/gnosis-safe-artifacts"],
-    deploy: "../../node_modules/@skaleboarder/safe-tools/hardhat/deploy",
+    artifacts: ["./node_modules/@skaleboarder/safe-tools/artifacts", "./node_modules/@skaleboarder/safe-tools/gnosis-safe-artifacts"],
+    deploy: "./node_modules/@skaleboarder/safe-tools/hardhat/deploy",
   }],
 },
 
