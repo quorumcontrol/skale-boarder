@@ -38,5 +38,9 @@ Create a relayer object with the required configurations, such as signer, ethers
   // we need to do this within the fixture so that the safe is created before the test runs
   // and when the state is snapshotted it all works.
   await relayer.ready
+
+  // This can be used anywhere you'd usually use an ethers signer.
+  const relayedEthersSigner = await relayer.wrappedSigner()
 ```
 
+The returned signer is a drop-in replacement (a subclass) of an ethers.Signer. [You can see how we use this in WAGMI](../wagmi/src/wrapper.ts)
