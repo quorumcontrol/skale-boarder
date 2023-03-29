@@ -1,11 +1,11 @@
 import { ContractNetworksConfig } from "@safe-global/safe-core-sdk";
 import { expect } from "chai";
 import { deployments, ethers } from "hardhat";
-import { SafeRelayer } from "../src/wallet";
+import { SafeRelayer } from "../src/SafeRelayer";
 import { WalletDeployer__factory } from "../typechain-types";
 const { providers, Wallet } = ethers
 
-describe("SafeWrapper", () => {
+describe("SafeSigner", () => {
     const setupTest = deployments.createFixture(
         async ({ deployments, getNamedAccounts, ethers }) => {
             await deployments.fixture(); // ensure you start from a fresh deployments

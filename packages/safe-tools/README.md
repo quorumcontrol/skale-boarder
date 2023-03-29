@@ -11,7 +11,7 @@ Import the required modules and classes:
 Import necessary modules and classes from the SafeRelayer library, ethers.js, and other required packages.
 
 ```typescript
-import { SafeRelayer, UserRelayerProps } from 'path/to/safe-relayer';
+import { SafeRelayer, UserRelayerProps } from '@skaleboarder/safe-tools';
 import { ethers } from 'ethers';
 ```
 

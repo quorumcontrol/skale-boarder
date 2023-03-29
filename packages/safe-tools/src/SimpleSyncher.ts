@@ -7,7 +7,7 @@ interface queuedFunction {
 /**
  * SimpleSyncher is used to serialize function calls, it is a single threaded
  * actor that does one function after the next. Every send returns a promise
- * that is executed after the serialization
+ * that resolves when the function is executed.
  */
 export class SimpleSyncher {
   private queue: queuedFunction[]

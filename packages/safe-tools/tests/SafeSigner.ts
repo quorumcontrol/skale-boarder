@@ -8,7 +8,7 @@ import { getBytesAndCreateToken } from '../src/tokenCreator'
 import { EnglishOwnerAdder, EnglishOwnerRemover, WalletDeployer } from '../typechain-types'
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers"
 
-describe("the safe SDK works", () => {
+describe("SafeRelayer", () => {
     const setupTest = deployments.createFixture(
         async ({ deployments, getNamedAccounts, ethers }) => {
             await deployments.fixture(); // ensure you start from a fresh deployments

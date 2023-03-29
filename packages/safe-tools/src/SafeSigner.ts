@@ -1,7 +1,7 @@
 import { ethers, BigNumber, Signer, providers } from "ethers"
 import { defineReadOnly, Deferrable } from "@ethersproject/properties";
 import { GnosisSafeL2__factory } from '../typechain-types'
-import { SafeRelayer } from "./wallet";
+import { SafeRelayer } from "./SafeRelayer";
 
 const GnosisSafeInterface = GnosisSafeL2__factory.createInterface()
 
@@ -10,10 +10,11 @@ enum OperationType {
     DelegateCall // 1
 }
 
-// const KEY_FOR_PRIVATE_KEY = 'safe-relayer-pk'
-
 const SUCCESS_TOPIC = "0x442e715f626346e8c54381002da614f62bee8d27386535b2521ec8540898556e" // ethers.utils.keccak256('ExecutionSuccess(bytes32,uint256)')
 
+/**
+ * SafeSigner is a subclass of ethers.Signer that uses a SafeRelayer to sign and send transactions.
+ */
 export class SafeSigner extends Signer {
     readonly provider?: providers.Provider
     private relayer: SafeRelayer

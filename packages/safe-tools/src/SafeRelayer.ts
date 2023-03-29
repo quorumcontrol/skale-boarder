@@ -3,7 +3,7 @@ import EthersAdapter from '@safe-global/safe-ethers-lib'
 import { providers, Signer, ethers } from 'ethers'
 import { getBytesAndCreateToken } from './tokenCreator'
 import { EnglishOwnerAdder, EnglishOwnerAdder__factory, WalletDeployer, WalletDeployer__factory } from '../typechain-types'
-import SimpleSyncher from './singletonQueue'
+import SimpleSyncher from './SimpleSyncher'
 import Safe from '@safe-global/safe-core-sdk'
 import { SafeSigner } from './SafeSigner'
 
