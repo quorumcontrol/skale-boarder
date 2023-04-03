@@ -1,0 +1,10 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "Enum",
+  "sourceName": "contracts/interfaces/IGnosisSafe.sol",
+  "abi": [],
+  "bytecode": "0x6080604052348015600f57600080fd5b50603f80601d6000396000f3fe6080604052600080fdfea2646970667358221220d79dd8a96ad7625de0afa1a1d2de56f96cd866c5be0272acdd31426bcee176d564736f6c63430008130033",
+  "deployedBytecode": "0x6080604052600080fdfea2646970667358221220d79dd8a96ad7625de0afa1a1d2de56f96cd866c5be0272acdd31426bcee176d564736f6c63430008130033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}
