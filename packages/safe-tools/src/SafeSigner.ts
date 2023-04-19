@@ -34,7 +34,7 @@ export class SafeSigner extends Signer {
     }
 
     async signMessage(message: string | Uint8Array): Promise<string> {
-        return this.relayer.originalSigner!.signMessage(message)
+        return this.relayer.localRelayer!.signMessage(message)
     }
 
     async signTransaction(transaction: Deferrable<providers.TransactionRequest>): Promise<string> {
