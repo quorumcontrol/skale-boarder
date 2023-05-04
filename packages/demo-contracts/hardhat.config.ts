@@ -24,6 +24,14 @@ The rest of the config and the "deterministic deploy" section is important.
 
 const config: HardhatUserConfig = {
   defaultNetwork: "hardhat",
+  networks: {
+    hardhat: {
+      mining: {
+        auto: false,
+        interval: [3000, 6000],
+      }
+    }
+  },
   solidity: "0.8.17",
   external: {
     contracts: [{
