@@ -44,7 +44,7 @@ export class SafeRelayer {
     private ethAdapter: EthersAdapter
     private walletDeployer: WalletDeployer
     private englishAdder: EnglishOwnerAdder
-    private _wrappedSigner?: Signer
+    private _wrappedSigner?: SafeSigner
 
     private localStorage: LocalStorage
 
@@ -170,6 +170,7 @@ export class SafeRelayer {
                 }
                 const originalAddr = await this.originalSigner.getAddress()
                 let addr = await this.walletDeployer.ownerToSafe(originalAddr)
+
                 // console.log("calling faucet")
                 await this.config.faucet(await this.localRelayer.getAddress(), this.localRelayer)
 

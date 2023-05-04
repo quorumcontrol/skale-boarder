@@ -15,7 +15,7 @@ import {
 } from '@rainbow-me/rainbowkit';
 import { configureChains, createClient, WagmiConfig } from 'wagmi';
 import { mainnet, polygon, optimism, arbitrum } from 'wagmi/chains';
-import { createChain, RainbowKitWalletWrapper, WagmiWrapperConfig } from '@skaleboarder/rainbowkit';
+import { createChain, RainbowKitWalletWrapper } from '@skaleboarder/rainbowkit';
 import addresses from "../addresses.json"
 
 
@@ -64,16 +64,16 @@ const skaleProvider = new providers.StaticJsonRpcProvider(localDev.rpcUrls.defau
 //     },
 // })
 
-const wrapperConfigs:WagmiWrapperConfig = {
+const wrapperConfigs = {
   ethers,
   provider: skaleProvider,
-  chainId:  localDev.id.toString(),
+  chainId: localDev.id.toString(),
   deploys: addresses.contracts,
-  faucet: async (address, _signer) => {
-      const resp = await fetch(`/api/localFaucet`, { body: JSON.stringify({ address }), method: "POST" })
-      const json = await resp.json()
-      console.log("resp: ", json)
-    },
+  faucet: async (address: string) => {
+    const resp = await fetch(`/api/localFaucet`, { body: JSON.stringify({ address }), method: "POST" })
+    const json = await resp.json()
+    console.log("resp: ", json)
+  },
 }
 
 const wrapper = new RainbowKitWalletWrapper(wrapperConfigs)

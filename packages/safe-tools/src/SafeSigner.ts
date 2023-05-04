@@ -2,6 +2,7 @@ import { ethers, BigNumber, Signer, providers } from "ethers"
 import { defineReadOnly, Deferrable } from "@ethersproject/properties";
 import { GnosisSafeL2__factory } from '../typechain-types'
 import { SafeRelayer } from "./SafeRelayer";
+import Safe from "@safe-global/safe-core-sdk";
 
 const GnosisSafeInterface = GnosisSafeL2__factory.createInterface()
 
@@ -31,6 +32,10 @@ export class SafeSigner extends Signer {
 
     getAddress(): Promise<string> {
         return this.relayer.originalSigner!.getAddress()
+    }
+
+    waitForSafe(): Promise<Safe> {
+        return this.relayer.safe
     }
 
     async signMessage(message: string | Uint8Array): Promise<string> {
