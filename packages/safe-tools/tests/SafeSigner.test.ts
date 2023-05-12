@@ -72,6 +72,36 @@ describe("SafeSigner", () => {
         expect((receipt.events![0] as any).args.sender).to.equal((await relayer.safe)!.getAddress())
     });
 
+    it.only("multicalls", async () => {
+        const { testContract, signers, deployer, walletDeployer, contractNetworks, deploys } = await setupTest()
+
+        const relayer = new SafeRelayer({
+            ethers,
+            signer: signers[1],
+            walletDeployerAddress: walletDeployer.address,
+            EnglishOwnerAdderAddress: deploys.EnglishOwnerAdder.address,
+            networkConfig: contractNetworks,
+            provider: deployer.provider!,
+            faucet: async (address: string) => {
+                await (await deployer.sendTransaction({
+                    to: address,
+                    value: ethers.utils.parseEther("2")
+                })).wait()
+            },
+            signerOptions: {
+                multicall: true,
+            }
+        })
+
+        const wrapped = relayer.wrappedSigner()
+        const connected = testContract.connect(wrapped)
+        const responses = await Promise.all(Array(5).fill(true).map(() => {
+            return connected.somethingToRead()
+        }))
+        expect(responses.length).to.equal(5)
+        expect(responses[0]).to.equal("helloWorld")
+    })
+
     it("finds the same safe again with a new relayer", async () => {
         const { relayer, signers, testContract, contractNetworks, walletDeployer, deploys, deployer } = await setupTest()
 

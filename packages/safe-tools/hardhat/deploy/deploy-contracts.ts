@@ -98,6 +98,14 @@ const deploy: DeployFunction = async (hre: HardhatRuntimeEnvironment): Promise<v
     deterministicDeployment: true,
   })
 
+  await deploy("Multicall3", {
+    from: deployer,
+    gasLimit: 3_000_000,
+    args: [],
+    log: true,
+    deterministicDeployment: true,
+  })
+
 }
 
 export default deploy
