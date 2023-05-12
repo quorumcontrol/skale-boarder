@@ -18,7 +18,6 @@ import { mainnet, polygon, optimism, arbitrum } from 'wagmi/chains';
 import { createChain, RainbowKitWalletWrapper } from '@skaleboarder/rainbowkit';
 import addresses from "../addresses.json"
 
-
 const skaleMainnet = createChain({
   id: BigNumber.from('0x3d91725c').toNumber(),
   name: 'Crypto Rome',
@@ -74,6 +73,9 @@ const wrapperConfigs = {
     const json = await resp.json()
     console.log("resp: ", json)
   },
+  signerOptions: {
+    multicall: true,
+  }
 }
 
 const wrapper = new RainbowKitWalletWrapper(wrapperConfigs)
