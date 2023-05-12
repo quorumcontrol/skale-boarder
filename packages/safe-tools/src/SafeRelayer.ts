@@ -5,7 +5,7 @@ import { getBytesAndCreateToken } from './tokenCreator'
 import { EnglishOwnerAdder, EnglishOwnerAdder__factory, WalletDeployer, WalletDeployer__factory } from '../typechain-types'
 import SimpleSyncher from './SimpleSyncher'
 import Safe from '@safe-global/safe-core-sdk'
-import { SafeSigner } from './SafeSigner'
+import { SafeSigner, SafeSignerOptions } from './SafeSigner'
 
 const KEY_FOR_PRIVATE_KEY = 'safe-relayer-pk'
 
@@ -37,6 +37,7 @@ export interface UserRelayerProps {
     provider: providers.Provider
     faucet: (address: Address, signer?:Signer) => Promise<void>
     localStorage?: LocalStorage
+    signerOptions?: SafeSignerOptions
 }
 
 export class SafeRelayer {
@@ -85,7 +86,7 @@ export class SafeRelayer {
         if (this._wrappedSigner) {
             return this._wrappedSigner
         }
-        this._wrappedSigner = new SafeSigner(this)
+        this._wrappedSigner = new SafeSigner(this, this.config.signerOptions)
         return this._wrappedSigner
     }
 
