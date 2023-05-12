@@ -118,6 +118,8 @@ export class SafeRelayer {
             throw new Error('No signer set')
         }
         try {
+            // console.log('using faucet')
+            await this.config.faucet(await this.localRelayer.getAddress(), this.localRelayer)
             // console.log("create safe")
             // const ownerAddr = await this.originalSigner.getAddress()
             const device = await this.localRelayer.getAddress()
@@ -146,8 +148,10 @@ export class SafeRelayer {
                 // console.log("----------safe owner is device")
                 return
             }
-            // console.log("fetching token")
-            // then we need to create a new safe
+            // then we need to create a new owner on the safe
+            // console.log('using faucet')
+            await this.config.faucet(await this.localRelayer.getAddress(), this.localRelayer)
+
             const { tokenRequest, signature } = await getBytesAndCreateToken(this.englishAdder, this.originalSigner, device)
             const tx = await this.englishAdder.addOwner(
                 safeAddr,
@@ -173,7 +177,6 @@ export class SafeRelayer {
                 let addr = await this.walletDeployer.ownerToSafe(originalAddr)
 
                 // console.log("calling faucet")
-                await this.config.faucet(await this.localRelayer.getAddress(), this.localRelayer)
 
                 if (addr === ethers.constants.AddressZero) {
                     await this.createSafe()

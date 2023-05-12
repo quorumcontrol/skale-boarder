@@ -72,7 +72,7 @@ describe("SafeSigner", () => {
         expect((receipt.events![0] as any).args.sender).to.equal((await relayer.safe)!.getAddress())
     });
 
-    it.only("multicalls", async () => {
+    it("multicalls", async () => {
         const { testContract, signers, deployer, walletDeployer, contractNetworks, deploys } = await setupTest()
 
         const relayer = new SafeRelayer({
