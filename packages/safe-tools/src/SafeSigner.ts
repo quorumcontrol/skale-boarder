@@ -94,8 +94,8 @@ export class SafeSigner extends Signer {
                         operation: OperationType.Call,
                     },
                     options: {
-                        safeTxGas: populated.gasLimit ? BigNumber.from(populated.gasLimit).toNumber() : undefined,
-                        gasPrice: populated.gasPrice ? BigNumber.from(populated.gasPrice).toNumber() : undefined,
+                        safeTxGas: populated.gasLimit ? BigNumber.from(populated.gasLimit).toHexString() : undefined,
+                        gasPrice: populated.gasPrice ? BigNumber.from(populated.gasPrice).toHexString() : undefined,
                     }
                 })
                 const signed = await safe.signTransaction(tx)
