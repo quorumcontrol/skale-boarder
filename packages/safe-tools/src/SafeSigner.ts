@@ -46,6 +46,10 @@ export class SafeSigner extends Signer {
         return this.relayer.originalSigner!.getAddress()
     }
 
+    safeAddress(): Promise<string|undefined> {
+        return this.relayer.predictedSafeAddress()
+    }
+
     waitForSafe(): Promise<Safe> {
         return this.relayer.safe
     }
