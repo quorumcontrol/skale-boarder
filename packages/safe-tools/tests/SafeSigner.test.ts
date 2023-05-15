@@ -57,7 +57,7 @@ describe("SafeSigner", () => {
             // and when the state is snapshotted it all works.
             await relayer.ready
 
-            return { deployer, signers, walletDeployer, deploys, contractNetworks, relayer, testContract, chainId }
+            return { deployer, signers, walletDeployer, deploys, contractNetworks, relayer, testContract, chainId, englishOwnerAddr: deploys.EnglishOwnerAdder.address }
         }
     );
 

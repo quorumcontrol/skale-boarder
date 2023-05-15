@@ -3,6 +3,7 @@
 pragma solidity ^0.8.19;
 
 import "./TokenAuthenticated.sol";
+import "./interfaces/IGnosisSafe.sol";
 
 // import "hardhat/console.sol";
 
@@ -14,11 +15,19 @@ interface IProxyFactory {
     ) external returns (address proxy);
 }
 
+interface IEnglishOwnerAdder {
+    function addOwner(
+        address safe,
+        TokenAuthenticated.TokenRequest calldata request,
+        bytes calldata signature
+    ) external;
+}
+
 /**
  * @title WalletDeployer
  * @dev A contract that allows a user to create a Gnosis Safe wallet by signing an English message.
  *      It sets up a a safe by calling the SafeStetup.sol contract which adds the correct modules and the TokenRequest
- *      device and owner as owners to the safe. 
+ *      device and owner as owners to the safe.
  */
 contract WalletDeployer is TokenAuthenticated {
     string public CHAIN_ID;
@@ -52,6 +61,16 @@ contract WalletDeployer is TokenAuthenticated {
         _setupHandler = setupHandler;
     }
 
+    // async walletAddressForUser(user:Address):Promise<Address> {
+    //     const setupData = await setupDataForUser(user)
+
+    //     const salt = utils.keccak256(utils.solidityPack(['bytes', 'uint256'], [utils.keccak256(setupData), this.chainId]))
+    //     const initCode = utils.solidityKeccak256(['bytes', 'bytes'], [await this.proxyFactory.proxyCreationCode(), utils.defaultAbiCoder.encode(['address'], [MASTER_COPY_ADDR])])
+
+    //     const addr = utils.getCreate2Address(this.proxyFactory.address, salt, initCode)
+    //     return addr.toLowerCase()
+    //   }
+
     /**
      * @dev Creates a Gnosis Safe wallet using the provided WalletCreateRequest and signature.
      * @param request The WalletCreateRequest struct containing the owner address, first device address, and issuedAt block number.
@@ -59,7 +78,8 @@ contract WalletDeployer is TokenAuthenticated {
      */
     function createSafe(
         TokenRequest calldata request,
-        bytes calldata signature
+        bytes calldata signature,
+        address englishOwnerAdder
     ) public {
         require(
             ownerToSafe[request.owner] == address(0),
@@ -67,16 +87,19 @@ contract WalletDeployer is TokenAuthenticated {
         );
         require(authenticate(request, signature));
 
-        // not sure exactly why, but it's important that this array is a memory address[] so that the initializer is encoded properly
-        address[] memory owners;
-        if (request.device == address(0)) {
-            owners = new address[](1);
-            owners[0] = request.owner;
-        } else {
-            owners = new address[](2);
-            owners[0] = request.owner;
-            owners[1] = request.device;
-        }
+        // // not sure exactly why, but it's important that this array is a memory address[] so that the initializer is encoded properly
+        // address[] memory owners;
+        // if (request.device == address(0)) {
+        //     owners = new address[](1);
+        //     owners[0] = request.owner;
+        // } else {
+        //     owners = new address[](2);
+        //     owners[0] = request.owner;
+        //     owners[1] = request.device;
+        // }
+
+        address[] memory owners = new address[](1);
+        owners[0] = request.owner;
 
         bytes memory initializer = abi.encodeWithSignature(
             "setup(address[],uint256,address,bytes,address,address,uint256,address)",
@@ -92,9 +115,31 @@ contract WalletDeployer is TokenAuthenticated {
         );
 
         address proxyAddr = IProxyFactory(_gnosisSafeProxyFactory)
-            .createProxyWithNonce(_gnosisSafeContract, initializer, block.chainid);
+            .createProxyWithNonce(
+                _gnosisSafeContract,
+                initializer,
+                block.chainid
+            );
+
+        if (request.device != address(0)) {
+            IEnglishOwnerAdder(englishOwnerAdder).addOwner(
+                proxyAddr,
+                request,
+                signature
+            );
+        }
 
         ownerToSafe[request.owner] = proxyAddr;
         safeToOwner[proxyAddr] = request.owner;
     }
 }
+
+// async walletAddressForUser(user:Address):Promise<Address> {
+//     const setupData = await setupDataForUser(user)
+
+//     const salt = utils.keccak256(utils.solidityPack(['bytes', 'uint256'], [utils.keccak256(setupData), this.chainId]))
+//     const initCode = utils.solidityKeccak256(['bytes', 'bytes'], [await this.proxyFactory.proxyCreationCode(), utils.defaultAbiCoder.encode(['address'], [MASTER_COPY_ADDR])])
+
+//     const addr = utils.getCreate2Address(this.proxyFactory.address, salt, initCode)
+//     return addr.toLowerCase()
+//   }

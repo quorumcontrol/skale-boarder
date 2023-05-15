@@ -1,4 +1,4 @@
-import { ContractNetworksConfig } from '@safe-global/safe-core-sdk'
+import { ContractNetworksConfig, PredictSafeProps } from '@safe-global/safe-core-sdk'
 import EthersAdapter from '@safe-global/safe-ethers-lib'
 import { providers, Signer, ethers } from 'ethers'
 import { getBytesAndCreateToken } from './tokenCreator'
@@ -113,6 +113,16 @@ export class SafeRelayer {
         return wallet
     }
 
+    private async predictedSafeAddress() {
+        const props:PredictSafeProps = {
+            safeAccountConfig: {
+                owners: [await this.localRelayer.getAddress()],
+                threshold: 1,
+                salt: 0,
+            }
+        }
+    }
+
     private async createSafe() {
         if (!this.originalSigner) {
             throw new Error('No signer set')
@@ -125,7 +135,7 @@ export class SafeRelayer {
             const device = await this.localRelayer.getAddress()
             // then we need to create a new safe
             const { tokenRequest, signature } = await getBytesAndCreateToken(this.walletDeployer, this.originalSigner, device)
-            const tx = await this.walletDeployer.createSafe(tokenRequest, signature)
+            const tx = await this.walletDeployer.createSafe(tokenRequest, signature, this.englishAdder.address)
             const receipt = await tx.wait()
             // console.log("safe created")
             return receipt

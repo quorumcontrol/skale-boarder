@@ -20,6 +20,9 @@ interface GnosisSafe {
         Enum.Operation operation
     ) external returns (bool success);
 
+    function addOwnerWithThreshold(address owner, uint256 threshold) external;
+    function removeOwner(address prevOwner, address owner, uint256 threshold) external;
+
     function getThreshold() external view returns (uint256);
 
     function getOwners() external view returns (address[] memory);
