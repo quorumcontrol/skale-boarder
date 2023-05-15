@@ -1,13 +1,18 @@
-import { ContractNetworksConfig, PredictSafeProps } from '@safe-global/safe-core-sdk'
-import EthersAdapter from '@safe-global/safe-ethers-lib'
-import { providers, Signer, ethers } from 'ethers'
+import { providers, Signer, ethers, BigNumber, constants } from 'ethers'
 import { getBytesAndCreateToken } from './tokenCreator'
 import { EnglishOwnerAdder, EnglishOwnerAdder__factory, WalletDeployer, WalletDeployer__factory } from '../typechain-types'
 import SimpleSyncher from './SimpleSyncher'
-import Safe from '@safe-global/safe-core-sdk'
+import Safe, { EthersAdapter, ContractNetworksConfig, PredictedSafeProps } from '@safe-global/protocol-kit'
 import { SafeSigner, SafeSignerOptions } from './SafeSigner'
+import addresses from './addresses'
 
 const KEY_FOR_PRIVATE_KEY = 'safe-relayer-pk'
+
+const setupEncoded = () => {
+    const ABI = ["function setup()"];
+    const iface = new ethers.utils.Interface(ABI);
+    return iface.encodeFunctionData("setup");
+}
 
 export class MemoryLocalStorage {
     private store: { [key: string]: string } = {}
@@ -31,13 +36,15 @@ interface LocalStorage {
 export interface UserRelayerProps {
     signer: Signer
     ethers: typeof ethers
-    walletDeployerAddress: Address
-    EnglishOwnerAdderAddress: Address
+
     networkConfig: ContractNetworksConfig
     provider: providers.Provider
     faucet: (address: Address, signer?:Signer) => Promise<void>
     localStorage?: LocalStorage
     signerOptions?: SafeSignerOptions
+    walletDeployerAddress?: Address
+    EnglishOwnerAdderAddress?: Address
+    setupHandlerAddress?: Address
 }
 
 export class SafeRelayer {
@@ -47,6 +54,7 @@ export class SafeRelayer {
     private englishAdder: EnglishOwnerAdder
     private _wrappedSigner?: SafeSigner
 
+    private setupHandlerAddress: Address
     private localStorage: LocalStorage
 
     localRelayer: Signer
@@ -61,8 +69,8 @@ export class SafeRelayer {
         this.localStorage = this.findDefaultLocalStorage()
 
         this.localRelayer = this.findOrCreateLocalRelayer()
-        this.walletDeployer = WalletDeployer__factory.connect(config.walletDeployerAddress, this.localRelayer)
-        this.englishAdder = EnglishOwnerAdder__factory.connect(config.EnglishOwnerAdderAddress, this.localRelayer)
+        this.walletDeployer = WalletDeployer__factory.connect(config.walletDeployerAddress || addresses.WalletDeployer, this.localRelayer)
+        this.englishAdder = EnglishOwnerAdder__factory.connect(config.EnglishOwnerAdderAddress || addresses.WalletDeployer, this.localRelayer)
         this.ethAdapter = new EthersAdapter({
             ethers: ethers,
             signerOrProvider: this.localRelayer,
@@ -70,6 +78,7 @@ export class SafeRelayer {
         this.singleton = new SimpleSyncher("safe-relayer")
         // this signer is the original signer, we'll use it to approve the safe.
         this.setupSignerAndFindOrCreateSafe(config.signer)
+        this.setupHandlerAddress = config.setupHandlerAddress || addresses.SafeSetup
     }
 
     get provider() {
@@ -113,14 +122,41 @@ export class SafeRelayer {
         return wallet
     }
 
-    private async predictedSafeAddress() {
-        const props:PredictSafeProps = {
+    async predictedSafeAddress() {
+        if (!this.originalSigner) {
+            return undefined
+        }
+
+        // console.log(
+        //     "fallback: ", addresses.CompatibilityFallbackHandler, 
+        //     "setup:", this.setupHandlerAddress,
+        //     "encoded", setupEncoded(),
+        //     "signer", await this.originalSigner.getAddress(),
+        // )
+
+        const props:PredictedSafeProps = {
             safeAccountConfig: {
-                owners: [await this.localRelayer.getAddress()],
+                owners: [await this.originalSigner.getAddress()],
                 threshold: 1,
-                salt: 0,
+                to: this.setupHandlerAddress.toLowerCase(),
+                data: setupEncoded(),
+                fallbackHandler: addresses.CompatibilityFallbackHandler,
+                payment: 0,
+                paymentReceiver: constants.AddressZero,
+                paymentToken: constants.AddressZero,
+            },
+            safeDeploymentConfig: {
+                safeVersion: '1.3.0',
+                saltNonce: BigNumber.from(await this.localRelayer.getChainId()).toHexString(),
             }
         }
+
+        const safe = await Safe.create({
+            ethAdapter: this.ethAdapter,
+            predictedSafe: props,
+            contractNetworks: this.config.networkConfig,
+        })
+        return safe.getAddress()
     }
 
     private async createSafe() {

@@ -27,6 +27,6 @@
     "outDir": "dist",
     "baseUrl": "src"
   },
-  "include": ["src", "src/**/*.json", "typechain-types", "tests", "hardhat/deploy"],
+  "include": ["src", "src/**/*.json", "typechain-types", "tests", "hardhat/deploy", "tasks"],
   "files": ["./hardhat.config.ts", "index.ts"]
 }

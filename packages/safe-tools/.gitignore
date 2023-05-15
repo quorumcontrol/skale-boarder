@@ -4,3 +4,4 @@ dist
 deployments/localhost
 deployments/hardhat
 .env
+tmp

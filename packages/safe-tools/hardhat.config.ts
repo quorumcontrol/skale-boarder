@@ -3,6 +3,7 @@ import dotenv from 'dotenv'
 import { BigNumber, utils } from "ethers";
 import 'hardhat-deploy'
 import { HardhatUserConfig, HttpNetworkUserConfig } from 'hardhat/types'
+import "./tasks/addresses"
 
 dotenv.config()
 
@@ -26,12 +27,14 @@ const config: HardhatUserConfig = {
   },
   networks: {
     localhost: {
-      url: "http://127.0.0.1:8545"
+      url: "http://127.0.0.1:8545",
+      tags: ["local", "test"]
     },
     hardhat: {
       allowUnlimitedContractSize: true,
       blockGasLimit: 100000000,
       gas: 100000000,
+      saveDeployments: true,
       accounts: [
         // Same as ganache-cli -d
         { balance: '100000000000000000000', privateKey: '0x4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d' },
@@ -44,7 +47,8 @@ const config: HardhatUserConfig = {
         { balance: '100000000000000000000', privateKey: '0xa453611d9419d0e56f499079478fd72c37b251a94bfde4d19872c44cf65386e3' },
         { balance: '100000000000000000000', privateKey: '0x829e924fdf021ba3dbbc4225edfece9aca04b929d6e75613329ca6f1d31c0bb4' },
         { balance: '100000000000000000000', privateKey: '0xb0057716d5917badaf911b193b12b910811c1497b5bada8d7711f758981c3773' },
-      ]
+      ],
+      tags: ["local", "test"]
     },
   },
   typechain: {

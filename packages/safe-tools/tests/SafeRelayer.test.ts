@@ -1,9 +1,8 @@
 
 import { expect } from 'chai'
-import { ContractTransactionReceipt, constants, utils } from 'ethers'
+import { ContractTransactionReceipt } from 'ethers'
 import { deployments, ethers } from 'hardhat'
-import EthersAdapter from '@safe-global/safe-ethers-lib'
-import Safe, { SafeFactory, SafeAccountConfig, ContractNetworksConfig } from '@safe-global/safe-core-sdk'
+import Safe, { SafeFactory, SafeAccountConfig, ContractNetworksConfig, EthersAdapter } from '@safe-global/protocol-kit'
 import { getBytesAndCreateToken } from '../src/tokenCreator'
 import { EnglishOwnerAdder, EnglishOwnerRemover, WalletDeployer } from '../typechain-types'
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers"
@@ -63,9 +62,9 @@ describe("SafeRelayer", () => {
     })
 
     async function proxyAddressFromReceipt(receipt: ContractTransactionReceipt, ethAdapter: EthersAdapter, contractNetworks: ContractNetworksConfig) {
-        const proxyContract = ethAdapter.getSafeProxyFactoryContract({
+        const proxyContract = await ethAdapter.getSafeProxyFactoryContract({
             safeVersion: "1.3.0",
-            chainId: await ethAdapter.getChainId(),
+            // chainId: await ethAdapter.getChainId(),
             customContractAddress: contractNetworks[await ethAdapter.getChainId()].safeProxyFactoryAddress
         })
 
@@ -104,7 +103,7 @@ describe("SafeRelayer", () => {
 
         const safe = await Safe.create({ ethAdapter, contractNetworks, safeAddress: proxyAddress })
         expect(await safe.getOwners()).to.have.lengthOf(2)
-        console.log("owners", await safe.getOwners())
+        // console.log("owners", await safe.getOwners())
         expect(await safe.isOwner(aliceDevice.address)).to.be.true
     })
 
@@ -190,7 +189,7 @@ describe("SafeRelayer", () => {
             expect(await safe.isModuleEnabled(englishOwnerRemover.address)).to.be.true
         })
 
-        it.only("can remove an owner using an english signed token", async () => {
+        it("can remove an owner using an english signed token", async () => {
             const { englishOwnerRemover, safe, alice, aliceDevice } = await loadFixture(fixture)
             
             // this is a little strange because we have to find the owner right before aliceDevice in the list of owners and use that as the value for previousOwner

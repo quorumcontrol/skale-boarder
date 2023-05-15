@@ -1,4 +1,4 @@
-import { ContractNetworksConfig } from "@safe-global/safe-core-sdk";
+import { ContractNetworksConfig } from "@safe-global/protocol-kit";
 import { expect } from "chai";
 import { deployments, ethers } from "hardhat";
 import { SafeRelayer } from "../src/SafeRelayer";
@@ -69,8 +69,15 @@ describe("SafeSigner", () => {
         const receipt = await tx.wait()
         
         expect(receipt.events?.length).to.equal(1)
-        expect((receipt.events![0] as any).args.sender).to.equal((await relayer.safe)!.getAddress())
+        expect((receipt.events![0] as any).args.sender).to.equal(await (await relayer.safe)!.getAddress())
     });
+
+    it("predicts address", async () => {
+        const { relayer } = await setupTest()
+        const addr = await relayer.predictedSafeAddress()
+
+        expect(addr).to.equal(await (await relayer.safe!).getAddress())
+    })
 
     it("multicalls", async () => {
         const { testContract, signers, deployer, walletDeployer, contractNetworks, deploys } = await setupTest()
@@ -123,7 +130,7 @@ describe("SafeSigner", () => {
         const existingSafe = await relayer.safe!
         
         
-        expect((await newRelayer.safe)?.getAddress()).to.equal(existingSafe.getAddress())
+        expect(await (await newRelayer.safe)?.getAddress()).to.equal(await existingSafe.getAddress())
 
         const wrapped = relayer.wrappedSigner()
         await expect(testContract.connect(wrapped).echo("hi", false)).to.not.be.reverted
@@ -137,12 +144,12 @@ describe("SafeSigner", () => {
         const receipt = await tx.wait()
         
         expect(receipt.events?.length).to.equal(1)
-        expect((receipt.events![0] as any).args.sender).to.equal((await relayer.safe)!.getAddress())
+        expect((receipt.events![0] as any).args.sender).to.equal(await (await relayer.safe)!.getAddress())
     })
 
 
     it('waits for safe', async () => {
-        const { relayer, testContract } = await setupTest()
+        const { relayer } = await setupTest()
         
         const wrapped = relayer.wrappedSigner()
         const safe = await wrapped.waitForSafe()

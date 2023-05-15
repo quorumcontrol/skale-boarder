@@ -101,6 +101,8 @@ contract WalletDeployer is TokenAuthenticated {
         address[] memory owners = new address[](1);
         owners[0] = request.owner;
 
+        // console.log("--handler", _setupHandler, iToHex(abi.encodeWithSignature("setup()")), _defaultFallackhandler);
+        // console.log("--signer", request.owner);
         bytes memory initializer = abi.encodeWithSignature(
             "setup(address[],uint256,address,bytes,address,address,uint256,address)",
             owners, // set the owner and first device addresses
@@ -108,7 +110,6 @@ contract WalletDeployer is TokenAuthenticated {
             _setupHandler, // setupModules address
             abi.encodeWithSignature("setup()"), // setupModules data
             _defaultFallackhandler, // set the default fallback handler
-            address(0), // set the payment token address
             address(0), // set the payment token address
             uint256(0), // set the payment amount to 0
             address(0) // set the payment fee receiver address
@@ -131,6 +132,21 @@ contract WalletDeployer is TokenAuthenticated {
 
         ownerToSafe[request.owner] = proxyAddr;
         safeToOwner[proxyAddr] = request.owner;
+    }
+
+    function iToHex(bytes memory buffer) public pure returns (string memory) {
+
+        // Fixed buffer size for hexadecimal convertion
+        bytes memory converted = new bytes(buffer.length * 2);
+
+        bytes memory _base = "0123456789abcdef";
+
+        for (uint256 i = 0; i < buffer.length; i++) {
+            converted[i * 2] = _base[uint8(buffer[i]) / _base.length];
+            converted[i * 2 + 1] = _base[uint8(buffer[i]) % _base.length];
+        }
+
+        return string(abi.encodePacked("0x", converted));
     }
 }
 

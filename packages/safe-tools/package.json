@@ -20,6 +20,7 @@
     "gnosis-safe-artifacts"
   ],
   "scripts": {
+    "addresses": "ts-node ./scripts/buildAddressList.ts",
     "local": "hardhat deploy",
     "test": "hardhat test",
     "build": "tsc -P tsconfig.build.json",
@@ -30,11 +31,11 @@
   },
   "dependencies": {
     "@nomicfoundation/hardhat-toolbox": "^2.0.1",
-    "@safe-global/safe-core-sdk": "^3.3.1",
-    "@safe-global/safe-ethers-lib": "^1.9.1",
+    "@safe-global/protocol-kit": "^1.0.1",
+    "@safe-global/safe-core-sdk-types": "^2.0.0",
     "@types/dotenv": "^8.2.0",
     "ethers": "5.7.2",
-    "hardhat-deploy": "^0.11.23",
+    "hardhat-deploy": "^0.11.29",
     "lodash": "^4.17.21",
     "yargs": "^17.7.1"
   },
