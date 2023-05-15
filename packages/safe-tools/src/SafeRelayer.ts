@@ -1,10 +1,12 @@
-import { providers, Signer, ethers, BigNumber, constants } from 'ethers'
+import { providers, Signer, ethers, BigNumber, constants, BytesLike } from 'ethers'
 import { getBytesAndCreateToken } from './tokenCreator'
-import { EnglishOwnerAdder, EnglishOwnerAdder__factory, WalletDeployer, WalletDeployer__factory } from '../typechain-types'
+import { EnglishOwnerAdder, EnglishOwnerAdder__factory, TokenAuthenticated, WalletDeployer, WalletDeployer__factory } from '../typechain-types'
 import SimpleSyncher from './SimpleSyncher'
 import Safe, { EthersAdapter, ContractNetworksConfig, PredictedSafeProps } from '@safe-global/protocol-kit'
 import { SafeSigner, SafeSignerOptions } from './SafeSigner'
 import addresses from './addresses'
+
+type TokenRequest = TokenAuthenticated.TokenRequestStructOutput
 
 const KEY_FOR_PRIVATE_KEY = 'safe-relayer-pk'
 
@@ -159,48 +161,31 @@ export class SafeRelayer {
         return safe.getAddress()
     }
 
-    private async createSafe() {
+    private async createSafe(tokenRequest: TokenRequest, signature: BytesLike) {
         if (!this.originalSigner) {
             throw new Error('No signer set')
         }
         try {
             // console.log('using faucet')
-            await this.config.faucet(await this.localRelayer.getAddress(), this.localRelayer)
             // console.log("create safe")
             // const ownerAddr = await this.originalSigner.getAddress()
-            const device = await this.localRelayer.getAddress()
             // then we need to create a new safe
-            const { tokenRequest, signature } = await getBytesAndCreateToken(this.walletDeployer, this.originalSigner, device)
             const tx = await this.walletDeployer.createSafe(tokenRequest, signature, this.englishAdder.address, [])
-            const receipt = await tx.wait()
-            // console.log("safe created")
-            return receipt
+            
+            return tx.wait()
         } catch (err) {
             console.error("error creating safe: ", err)
             throw err
         }
     }
 
-    private async maybeAddDevice(safe: Safe) {
+    private async addDevice(safe: Safe, tokenRequest: TokenRequest, signature: BytesLike) {
         try {
             if (!this.originalSigner) {
                 throw new Error('No signer set')
             }
-            // console.log("---------- safe", safe)
-            const safeAddr = safe.getAddress()
-            const device = await this.localRelayer.getAddress()
-            // console.log("local relayer")
-            if (await safe.isOwner(device)) {
-                // console.log("----------safe owner is device")
-                return
-            }
-            // then we need to create a new owner on the safe
-            // console.log('using faucet')
-            await this.config.faucet(await this.localRelayer.getAddress(), this.localRelayer)
-
-            const { tokenRequest, signature } = await getBytesAndCreateToken(this.englishAdder, this.originalSigner, device)
             const tx = await this.englishAdder.addOwner(
-                safeAddr,
+                await safe.getAddress(),
                 tokenRequest,
                 signature
             )
@@ -212,6 +197,9 @@ export class SafeRelayer {
         }
     }
 
+    private async _safe() {
+    }
+
     private setupSignerAndFindOrCreateSafe(signer:Signer) {
         this.originalSigner = signer
         this.safe = this.singleton.push(async () => {
@@ -221,20 +209,35 @@ export class SafeRelayer {
                 }
                 const originalAddr = await this.originalSigner.getAddress()
                 let addr = await this.walletDeployer.ownerToSafe(originalAddr)
-
-                // console.log("calling faucet")
-
-                if (addr === ethers.constants.AddressZero) {
-                    await this.createSafe()
-                    addr = await this.walletDeployer.ownerToSafe(originalAddr)
-                }
-
-                const safe = await Safe.create({
+                
+                let safe = (addr === constants.AddressZero) ? undefined : await Safe.create({
                     ethAdapter: this.ethAdapter,
                     safeAddress: addr,
                     contractNetworks: this.config.networkConfig,
                 })
-                await this.maybeAddDevice(safe)
+
+                const deviceAddr = await this.localRelayer.getAddress()
+
+                if (addr !== constants.AddressZero && await safe?.isOwner(deviceAddr)) {
+                    return safe
+                }
+                // console.log("calling faucet")
+                const { tokenRequest, signature } = await getBytesAndCreateToken(this.walletDeployer, this.originalSigner, deviceAddr)
+
+                await this.config.faucet(await this.localRelayer.getAddress(), this.localRelayer)
+
+                if (addr === ethers.constants.AddressZero) {
+                    await this.createSafe(tokenRequest, signature)
+                    addr = (await this.predictedSafeAddress())!
+                }
+
+                safe = await Safe.create({
+                    ethAdapter: this.ethAdapter,
+                    safeAddress: addr,
+                    contractNetworks: this.config.networkConfig,
+                })
+
+                await this.addDevice(safe, tokenRequest, signature)
                 // console.log("--------- safe created")
                 return safe
             } catch (err) {

@@ -10,6 +10,6 @@ export default {
   "EnglishOwnerAdder": "0x29D4eCbF1951f0d93e83BA0E5F6DaD4Be6990836",
   "EnglishOwnerRemover": "0x542b8c491c0f561A4c703129A0C9aaDe3b63ec04",
   "SafeSetup": "0x9b70998392a11c744282250Eb41bA4754d2521E9",
-  "WalletDeployer": "0xBEdaF6b756D91330aE7e53cC8aeBEc21c6d7a383",
+  "WalletDeployer": "0x062b0011FF42b5334C0db79a96d0113E54B7C285",
   "Multicall3": "0x15250E1456243f59397e56E663ACe82eD762Fd12"
 }
