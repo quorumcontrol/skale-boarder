@@ -219,7 +219,7 @@ export class SafeRelayer {
                 const deviceAddr = await this.localRelayer.getAddress()
 
                 if (addr !== constants.AddressZero && await safe?.isOwner(deviceAddr)) {
-                    return safe
+                    return safe!
                 }
                 // console.log("calling faucet")
                 const { tokenRequest, signature } = await getBytesAndCreateToken(this.walletDeployer, this.originalSigner, deviceAddr)
