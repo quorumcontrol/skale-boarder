@@ -171,7 +171,7 @@ export class SafeRelayer {
             const device = await this.localRelayer.getAddress()
             // then we need to create a new safe
             const { tokenRequest, signature } = await getBytesAndCreateToken(this.walletDeployer, this.originalSigner, device)
-            const tx = await this.walletDeployer.createSafe(tokenRequest, signature, this.englishAdder.address)
+            const tx = await this.walletDeployer.createSafe(tokenRequest, signature, this.englishAdder.address, [])
             const receipt = await tx.wait()
             // console.log("safe created")
             return receipt

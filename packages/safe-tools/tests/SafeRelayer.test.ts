@@ -93,7 +93,7 @@ describe("SafeRelayer", () => {
         const aliceDevice = signers[2]
 
         const { tokenRequest, signature } = await getBytesAndCreateToken(walletDeployer, alice, aliceDevice.address)
-        const tx = walletCreator.createSafe(tokenRequest, signature, englishOwnerAddr)
+        const tx = walletCreator.createSafe(tokenRequest, signature, englishOwnerAddr, [])
         await expect(tx).to.not.be.reverted
 
         // const safeFactory = await SafeFactory.create({ ethAdapter, contractNetworks })
@@ -114,7 +114,7 @@ describe("SafeRelayer", () => {
         const aliceDevice = signers[2]
 
         const { tokenRequest, signature } = await getBytesAndCreateToken(walletDeployer, alice, aliceDevice.address)
-        const tx = walletCreator.createSafe(tokenRequest, signature, englishOwnerAddr)
+        const tx = walletCreator.createSafe(tokenRequest, signature, englishOwnerAddr, [])
         await expect(tx).to.not.be.reverted
 
         // const safeFactory = await SafeFactory.create({ ethAdapter, contractNetworks })
@@ -135,7 +135,7 @@ describe("SafeRelayer", () => {
             const englishOwnerAdder = (await ethers.getContractFactory("EnglishOwnerAdder")).attach(englishOwnerAddr).connect(deployer) as EnglishOwnerAdder
             const { tokenRequest, signature } = await getBytesAndCreateToken(walletDeployer, alice, aliceDevice.address)
 
-            const receipt = await (await (walletDeployer as WalletDeployer).createSafe(tokenRequest, signature, englishOwnerAddr)).wait()
+            const receipt = await (await (walletDeployer as WalletDeployer).createSafe(tokenRequest, signature, englishOwnerAddr, [])).wait()
 
             const proxyAddress = await proxyAddressFromReceipt(receipt, ethAdapter, contractNetworks)
 
@@ -174,7 +174,7 @@ describe("SafeRelayer", () => {
             const englishOwnerRemover = (await ethers.getContractFactory("EnglishOwnerRemover")).attach(deploys.EnglishOwnerRemover.address).connect(deployer) as EnglishOwnerRemover
             
             const { tokenRequest, signature } = await getBytesAndCreateToken(walletDeployer, alice, aliceDevice.address)
-            const receipt = await (await (walletDeployer as WalletDeployer).createSafe(tokenRequest, signature, englishOwnerAddr)).wait()
+            const receipt = await (await (walletDeployer as WalletDeployer).createSafe(tokenRequest, signature, englishOwnerAddr, [])).wait()
             expect(receipt).to.exist
             const proxyAddress = await proxyAddressFromReceipt(receipt, ethAdapter, contractNetworks)
 

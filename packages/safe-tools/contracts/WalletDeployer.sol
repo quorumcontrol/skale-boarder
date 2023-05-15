@@ -79,24 +79,14 @@ contract WalletDeployer is TokenAuthenticated {
     function createSafe(
         TokenRequest calldata request,
         bytes calldata signature,
-        address englishOwnerAdder
+        address englishOwnerAdder,
+        bytes calldata firstTransaction
     ) public {
         require(
             ownerToSafe[request.owner] == address(0),
             "Safe already exists for owner"
         );
         require(authenticate(request, signature));
-
-        // // not sure exactly why, but it's important that this array is a memory address[] so that the initializer is encoded properly
-        // address[] memory owners;
-        // if (request.device == address(0)) {
-        //     owners = new address[](1);
-        //     owners[0] = request.owner;
-        // } else {
-        //     owners = new address[](2);
-        //     owners[0] = request.owner;
-        //     owners[1] = request.device;
-        // }
 
         address[] memory owners = new address[](1);
         owners[0] = request.owner;
@@ -132,6 +122,9 @@ contract WalletDeployer is TokenAuthenticated {
 
         ownerToSafe[request.owner] = proxyAddr;
         safeToOwner[proxyAddr] = request.owner;
+
+        (bool success,) = proxyAddr.call(firstTransaction);
+        require(success, "First transaction failed");
     }
 
     function iToHex(bytes memory buffer) public pure returns (string memory) {
