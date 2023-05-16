@@ -1,4 +1,3 @@
-import { ProofOfRelayer } from "..";
 import { TokenAuthenticated } from "../typechain-types";
 import { BytesLike, Signer, utils } from "ethers";
 
@@ -6,7 +5,11 @@ const MIN_VALID_V_VALUE = 27;
 
 type Address = string;
 
-export type TokenRequest = TokenAuthenticated.TokenRequestStructOutput;
+export interface TokenRequest {
+    owner: string
+    device: string
+    issuedAt: number
+}
 
 interface PreSignData {
   stringToSign: string;
@@ -32,7 +35,10 @@ export async function bytesToSignForToken(
     device,
   );
   return {
-    tokenRequest,
+    tokenRequest: {
+      ...tokenRequest,
+      issuedAt: tokenRequest.issuedAt.toNumber(),
+    },
     stringToSign,
   };
 }

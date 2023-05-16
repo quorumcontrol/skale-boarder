@@ -1,12 +1,10 @@
 import { providers, Signer, ethers, BigNumber, constants, BytesLike } from 'ethers'
-import { getBytesAndCreateToken } from './tokenCreator'
-import { EnglishOwnerAdder, EnglishOwnerAdder__factory, TokenAuthenticated, WalletDeployer, WalletDeployer__factory } from '../typechain-types'
+import { getBytesAndCreateToken, TokenRequest } from './tokenCreator'
+import { EnglishOwnerAdder, EnglishOwnerAdder__factory, WalletDeployer, WalletDeployer__factory } from '../typechain-types'
 import SimpleSyncher from './SimpleSyncher'
 import Safe, { EthersAdapter, ContractNetworksConfig, PredictedSafeProps } from '@safe-global/protocol-kit'
 import { SafeSigner, SafeSignerOptions } from './SafeSigner'
 import addresses from './addresses'
-
-type TokenRequest = TokenAuthenticated.TokenRequestStructOutput
 
 const KEY_FOR_PRIVATE_KEY = 'safe-relayer-pk'
 
