@@ -121,10 +121,14 @@ export class SafeRelayer {
       
         const relayerSignature = await this.localRelayer.signMessage(JSON.stringify(proof))
 
-        const safe = await this.predictedSafe()
+        let safe = await this.predictedSafe()
         const isDeployed = await safe.isSafeDeployed()
-
         if (isDeployed) {
+            safe = await this.connectSafe(safe)
+        }
+        const isDeployedAndReady = isDeployed && await safe.isOwner(await this.localRelayer.getAddress())
+
+        if (isDeployedAndReady) {
             return {
                 owner: await this.originalSigner!.getAddress(),
                 relayer: proof,
@@ -283,6 +287,14 @@ export class SafeRelayer {
         return { tokenRequest, signature }
     }
 
+    private async connectSafe(safe:Safe):Promise<Safe> {
+        return safe.connect({
+            ethAdapter: this.ethAdapter,
+            safeAddress: await safe.getAddress(),
+            contractNetworks: this.config.networkConfig,
+        })
+    }
+
     private setupSignerAndFindOrCreateSafe(signer:Signer) {
         this.originalSigner = signer
         this.safe = this.singleton.push(async () => {
@@ -299,11 +311,7 @@ export class SafeRelayer {
                     await this.createSafe(tokenRequest, signature)
                 }
 
-                safe = await safe.connect({
-                    ethAdapter: this.ethAdapter,
-                    safeAddress: await safe.getAddress(),
-                    contractNetworks: this.config.networkConfig,
-                })
+                safe = await this.connectSafe(safe)
 
                 const deviceAddr = await this.localRelayer.getAddress()
 
