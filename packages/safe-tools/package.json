@@ -20,9 +20,10 @@
     "gnosis-safe-artifacts"
   ],
   "scripts": {
-    "addresses": "ts-node ./scripts/buildAddressList.ts",
+    "addresses": "hardhat addresses",
     "local": "hardhat deploy",
     "test": "hardhat test",
+    "prebuild": "rm -rf dist",
     "build": "tsc -P tsconfig.build.json",
     "postbuild": "rm -f dist/hardhat/deploy/*.ts && rm -f dist/hardhat/deploy/*.map"
   },
