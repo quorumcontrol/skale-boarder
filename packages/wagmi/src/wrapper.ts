@@ -1,6 +1,5 @@
 import {
   SafeRelayer,
-  SafeSignerOptions,
   UserRelayerProps,
 } from "@skaleboarder/safe-tools";
 import { ethers, providers, Signer } from "ethers";
@@ -28,7 +27,6 @@ export interface WagmiWrapperConfig {
     WalletDeployer: ContractDeploy;
   };
   faucet: UserRelayerProps["faucet"];
-  signerOptions?: SafeSignerOptions;
   localStorage?: UserRelayerProps["localStorage"];
 }
 
@@ -66,7 +64,6 @@ export class WagmiWrapper {
       provider: this.config.provider,
       localStorage: this.config.localStorage,
       faucet: this.config.faucet,
-      signerOptions: this.config.signerOptions,
     });
   };
 

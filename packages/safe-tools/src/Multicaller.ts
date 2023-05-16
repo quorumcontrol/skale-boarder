@@ -1,4 +1,4 @@
-import { BytesLike, PopulatedTransaction, providers } from "ethers"
+import { providers } from "ethers"
 import debounce from "lodash/debounce"
 import { Multicall3, Multicall3__factory } from "../typechain-types"
 import { Deferrable } from "ethers/lib/utils"
