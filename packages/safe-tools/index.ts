@@ -1,5 +1,3 @@
-import addresses from "addresses";
-
 export * from "./typechain-types";
 export * from "./src/SafeRelayer"
 export * from "./src/tokenCreator"
