@@ -1,16 +1,11 @@
-import { ethers, BigNumber, Signer, providers } from "ethers"
+import { ethers, Signer, providers } from "ethers"
 import { defineReadOnly, Deferrable } from "@ethersproject/properties";
-import { GnosisSafeL2__factory } from '../typechain-types'
+import { GnosisSafeL2, GnosisSafeL2__factory } from '../typechain-types'
 import { ProofOfRelayer, SafeRelayer } from "./SafeRelayer";
-import Safe from "@safe-global/protocol-kit";
-import { MultiCaller, MultiCallerOptions } from "./Multicaller";
+import { OPERATION } from "./txSigner";
+import { safeFromPopulated } from "./GnosisHelpers";
 
 const GnosisSafeInterface = GnosisSafeL2__factory.createInterface()
-
-enum OperationType {
-    Call, // 0
-    DelegateCall // 1
-}
 
 const SUCCESS_TOPIC = "0x442e715f626346e8c54381002da614f62bee8d27386535b2521ec8540898556e" // ethers.utils.keccak256('ExecutionSuccess(bytes32,uint256)')
 
@@ -45,7 +40,7 @@ export class SafeSigner extends Signer {
         return this.relayer.proofOfRelayer()
     }
 
-    waitForSafe(): Promise<Safe> {
+    waitForSafe(): Promise<GnosisSafeL2> {
         return this.relayer.safe
     }
 
@@ -80,28 +75,27 @@ export class SafeSigner extends Signer {
                 // the transaction will fail.
                 transaction.from = await this.relayer.localRelayer.getAddress()
                 const populated = await this.relayer.localRelayer.populateTransaction(transaction)
-                // console.log("executing transaction", populated.nonce)
-                const safe = await this.relayer.safe
-                const tx = await safe.createTransaction({
-                    safeTransactionData: {
-                        to: populated.to!,
-                        value: populated.value?.toString() || "0x0",
-                        data: populated.data?.toString() || '0x',
-                        operation: OperationType.Call,
-                    },
-                    options: {
-                        safeTxGas: populated.gasLimit ? BigNumber.from(populated.gasLimit).toHexString() : undefined,
-                        gasPrice: populated.gasPrice ? BigNumber.from(populated.gasPrice).toHexString() : undefined,
+
+                const safeContract = GnosisSafeL2__factory.connect((await this.relayer.predictedSafeAddress())!, this.relayer.localRelayer)
+                
+                const nonce = await safeContract.nonce()
+
+                const [txData] = await safeFromPopulated(
+                    safeContract,
+                    nonce,
+                    this.relayer.localRelayer,
+                    populated.to!,
+                    populated.data!,
+                    OPERATION.CALL,
+                    {
+                        gasLimit: 3_000_000
                     }
-                })
-                const signed = await safe.signTransaction(tx)
-                const executionResponse = await safe.executeTransaction(signed)
-                const transactionResponse = executionResponse.transactionResponse
-                if (!transactionResponse) {
-                    throw new Error("no transaction response")
-                }
-                const originalWait = transactionResponse.wait
-                transactionResponse.wait = async (confirmations?: number): Promise<ethers.ContractReceipt> => {
+                )
+
+                const tx = await this.relayer.localRelayer.sendTransaction(txData)
+                
+                const originalWait = tx.wait
+                tx.wait = async (confirmations?: number): Promise<ethers.ContractReceipt> => {
                     const receipt = await originalWait(confirmations)
 
                     // purposely *removing* the SUCCESS_TOPIC so that the transaction looks *just* like a normal transaction
@@ -121,7 +115,7 @@ export class SafeSigner extends Signer {
                     throw new Error("transaction failed")
                 }
 
-                return transactionResponse
+                return tx
             } catch (err) {
                 // console.error("error creating transaction: ", err)
                 throw err
