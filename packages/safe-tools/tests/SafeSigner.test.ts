@@ -1,7 +1,7 @@
 import { ContractNetworksConfig } from "@safe-global/protocol-kit";
 import { expect } from "chai";
 import { deployments, ethers } from "hardhat";
-import { SafeRelayer } from "../src/SafeRelayer";
+import { MemoryLocalStorage, SafeRelayer } from "../src/SafeRelayer";
 import { WalletDeployer__factory } from "../typechain-types";
 const { providers, Wallet } = ethers
 
@@ -38,6 +38,8 @@ describe("SafeSigner", () => {
             const testContract = await testContractFactory.deploy()
             await testContract.deployed()
 
+            const localStorage = new MemoryLocalStorage()
+
             const relayer = new SafeRelayer({
                 ethers,
                 signer: signers[1],
@@ -45,6 +47,7 @@ describe("SafeSigner", () => {
                 EnglishOwnerAdderAddress: deploys.EnglishOwnerAdder.address,
                 networkConfig: contractNetworks,
                 provider: deployer.provider!,
+                localStorage,
                 faucet: async (address: string) => {
                     await (await deployer.sendTransaction({
                         to: address,
@@ -57,7 +60,7 @@ describe("SafeSigner", () => {
             // and when the state is snapshotted it all works.
             await relayer.ready
 
-            return { deployer, signers, walletDeployer, deploys, contractNetworks, relayer, testContract, chainId, englishOwnerAddr: deploys.EnglishOwnerAdder.address }
+            return { deployer, signers, walletDeployer, deploys, contractNetworks, relayer, testContract, chainId, englishOwnerAddr: deploys.EnglishOwnerAdder.address, localStorage }
         }
     );
 
@@ -71,6 +74,73 @@ describe("SafeSigner", () => {
         expect(receipt.events?.length).to.equal(1)
         expect((receipt.events![0] as any).args.sender).to.equal(await (await relayer.safe)!.getAddress())
     });
+
+    it("finds a wallet that is already deployed", async () => {
+        const { signers, deployer, walletDeployer, contractNetworks, deploys, localStorage, relayer} = await setupTest()
+
+        const newRelayer = new SafeRelayer({
+            ethers,
+            signer: signers[1],
+            walletDeployerAddress: walletDeployer.address,
+            EnglishOwnerAdderAddress: deploys.EnglishOwnerAdder.address,
+            networkConfig: contractNetworks,
+            provider: deployer.provider!,
+            localStorage,
+            faucet: async (address: string) => {
+                await (await deployer.sendTransaction({
+                    to: address,
+                    value: ethers.utils.parseEther("2")
+                })).wait()
+            },
+            signerOptions: {
+                multicall: true,
+            }
+        })
+
+        expect(await relayer.localRelayer.getAddress()).to.equal(await newRelayer.localRelayer.getAddress())
+    })
+
+    describe("proof of relayer", () => {
+
+        it("proves when safe is already deployed", async () => {
+            const { relayer} = await setupTest()
+            const proof = await relayer.proofOfRelayer()
+            expect(proof).to.not.be.undefined
+            expect(proof.safeDeployed).to.be.true
+            expect(proof.relayer.address).to.equal(await relayer.localRelayer.getAddress())
+        })
+
+        it("proves when safe is not deployed", async () => {
+            const { signers, deployer, walletDeployer, contractNetworks, deploys } = await setupTest()
+            const relayer = new SafeRelayer({
+                ethers,
+                signer: signers[2],
+                walletDeployerAddress: walletDeployer.address,
+                EnglishOwnerAdderAddress: deploys.EnglishOwnerAdder.address,
+                networkConfig: contractNetworks,
+                provider: deployer.provider!,
+                localStorage: new MemoryLocalStorage(),
+                faucet: async (address: string) => {
+                    // delay the faucet so that safe creation takes a long time
+                    // and gives our proofOfRelayer time to run without deploying the safe
+                    await new Promise(resolve => setTimeout(resolve, 200))
+                    await (await deployer.sendTransaction({
+                        to: address,
+                        value: ethers.utils.parseEther("2")
+                    })).wait()
+                },
+                signerOptions: {
+                    multicall: true,
+                }
+            })
+            const proof = await relayer.proofOfRelayer()
+            expect(proof).to.not.be.undefined
+            expect(proof.safeDeployed).to.be.false
+            expect(proof.relayer.address).to.equal(await relayer.localRelayer.getAddress())
+            expect(proof.tokenRequest).to.exist  
+            expect(proof.tokenRequestSignature).to.exist  
+        })
+    })
 
     it("predicts address", async () => {
         const { relayer } = await setupTest()

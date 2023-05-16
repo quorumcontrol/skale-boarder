@@ -9,7 +9,7 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers"
 
 const SENTINEL_ADDRESS = '0x0000000000000000000000000000000000000001'
 
-describe("SafeRelayer", () => {
+describe("WalletDeployer", () => {
     const setupTest = deployments.createFixture(
         async ({ deployments, getNamedAccounts, ethers }) => {
             await deployments.fixture(); // ensure you start from a fresh deployments

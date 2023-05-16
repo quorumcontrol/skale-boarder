@@ -35,6 +35,23 @@ interface LocalStorage {
     setItem(key: string, value: string): void
 }
 
+export interface ProofOfRelayer {
+    owner: Address
+    relayer: {
+        address: Address
+        chainId: number
+        exp: number 
+    }
+    signature: string
+
+    safeDeployed: boolean
+    // if the safe isn't deployed yet, we can use the user's
+    // signed auth in order to prove this relayer is ok
+
+    tokenRequest?: TokenRequest
+    tokenRequestSignature?: BytesLike
+}
+
 export interface UserRelayerProps {
     signer: Signer
     ethers: typeof ethers
@@ -58,6 +75,10 @@ export class SafeRelayer {
 
     private setupHandlerAddress: Address
     private localStorage: LocalStorage
+
+    private authorization?: Promise<{ tokenRequest: TokenRequest, signature: BytesLike}>
+
+    private faucetCalled = false
 
     localRelayer: Signer
     singleton: SimpleSyncher
@@ -91,6 +112,38 @@ export class SafeRelayer {
     // more inutitive sense than `await relayer.safe`
     get ready() {
         return this.safe
+    }
+
+    async proofOfRelayer():Promise<ProofOfRelayer> {
+        const proof = {
+          address: await this.localRelayer.getAddress(),
+          chainId: await this.localRelayer.getChainId(),
+          exp: Math.ceil(new Date().getTime() / 1000) + (10 * 60) // 10 minutes
+        }
+      
+        const relayerSignature = await this.localRelayer.signMessage(JSON.stringify(proof))
+
+        const safe = await this.predictedSafe()
+        const isDeployed = await safe.isSafeDeployed()
+
+        if (isDeployed) {
+            return {
+                owner: await this.originalSigner!.getAddress(),
+                relayer: proof,
+                signature: relayerSignature,
+                safeDeployed: true,
+            }
+        }
+
+        const { tokenRequest, signature } = await this.findOrCreateAuthorization()
+        return {
+            owner: await this.originalSigner!.getAddress(),
+            relayer: proof,
+            signature: relayerSignature,
+            safeDeployed: false,
+            tokenRequest,
+            tokenRequestSignature: signature,
+        }
     }
 
     wrappedSigner() {
@@ -197,7 +250,39 @@ export class SafeRelayer {
         }
     }
 
-    private async _safe() {
+    private findOrCreateAuthorization() {
+        if (this.authorization) {
+            return this.authorization
+        }
+
+        this.authorization = new Promise(async (resolve, reject) => {
+            if (!this.originalSigner) {
+                reject(new Error('No signer set'))
+                return
+            }
+            resolve(getBytesAndCreateToken(this.walletDeployer, this.originalSigner, await this.localRelayer.getAddress()))
+        })
+        
+        return this.authorization
+    }
+
+    private async callFaucetOnce() {
+        if (this.faucetCalled) {
+            return
+        }
+        this.faucetCalled = true
+
+        return this.config.faucet(await this.localRelayer.getAddress(), this.localRelayer)
+    }
+
+    private async findOrCreateAuthorizationAndCallFaucet() {
+        const [
+            { tokenRequest, signature },
+        ] = await Promise.all([
+            this.findOrCreateAuthorization(),
+            this.callFaucetOnce(),
+        ])
+        return { tokenRequest, signature }
     }
 
     private setupSignerAndFindOrCreateSafe(signer:Signer) {
@@ -207,35 +292,29 @@ export class SafeRelayer {
                 if (!this.originalSigner) {
                     throw new Error('No signer set')
                 }
-                const originalAddr = await this.originalSigner.getAddress()
-                let addr = await this.walletDeployer.ownerToSafe(originalAddr)
                 
-                let safe = (addr === constants.AddressZero) ? undefined : await Safe.create({
+                let safe = await this.predictedSafe()
+                const isDeployed = await safe.isSafeDeployed()
+
+                if (!isDeployed) {
+                    const { tokenRequest, signature } = await this.findOrCreateAuthorizationAndCallFaucet()
+                    await this.createSafe(tokenRequest, signature)
+                }
+
+                safe = await safe.connect({
                     ethAdapter: this.ethAdapter,
-                    safeAddress: addr,
+                    safeAddress: await safe.getAddress(),
                     contractNetworks: this.config.networkConfig,
                 })
 
                 const deviceAddr = await this.localRelayer.getAddress()
 
-                if (addr !== constants.AddressZero && await safe?.isOwner(deviceAddr)) {
-                    return safe!
+                if (await safe.isOwner(deviceAddr)) {
+                    // console.log("safe already exists")
+                    return safe
                 }
-                // console.log("calling faucet")
-                const { tokenRequest, signature } = await getBytesAndCreateToken(this.walletDeployer, this.originalSigner, deviceAddr)
-
-                await this.config.faucet(await this.localRelayer.getAddress(), this.localRelayer)
-
-                if (addr === ethers.constants.AddressZero) {
-                    await this.createSafe(tokenRequest, signature)
-                    addr = (await this.predictedSafeAddress())!
-                }
-
-                safe = await Safe.create({
-                    ethAdapter: this.ethAdapter,
-                    safeAddress: addr,
-                    contractNetworks: this.config.networkConfig,
-                })
+                // console.log("getting new token signature")
+                const { tokenRequest, signature } = await this.findOrCreateAuthorizationAndCallFaucet()
 
                 await this.addDevice(safe, tokenRequest, signature)
                 // console.log("--------- safe created")
