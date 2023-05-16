@@ -3,7 +3,7 @@ import { expect } from 'chai'
 import { ContractTransactionReceipt } from 'ethers'
 import { deployments, ethers } from 'hardhat'
 import Safe, { SafeFactory, SafeAccountConfig, ContractNetworksConfig, EthersAdapter } from '@safe-global/protocol-kit'
-import { getBytesAndCreateToken } from '../src/tokenCreator'
+import { authenticateTokenRequest, getBytesAndCreateToken } from '../src/tokenCreator'
 import { EnglishOwnerAdder, EnglishOwnerRemover, WalletDeployer } from '../typechain-types'
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers"
 
@@ -42,6 +42,14 @@ describe("WalletDeployer", () => {
             return { deployer, signers, walletDeployer, deploys, contractNetworks, ethAdapter, englishOwnerAddr: deploys.EnglishOwnerAdder.address }
         }
     );
+
+    it('generates verifiable token requests', async () => {
+        const { walletDeployer, signers } = await setupTest()
+
+        const { tokenRequest, signature } = await getBytesAndCreateToken(walletDeployer, signers[0], await signers[1].getAddress())
+
+        expect(await authenticateTokenRequest(await walletDeployer.STATEMENT(), tokenRequest, signature)).to.be.true
+    })
 
     it("allows safe creation with sdk", async () => {
         const { deployer, ethAdapter, contractNetworks, signers } = await setupTest()

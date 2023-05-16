@@ -1,7 +1,7 @@
 import { ethers, BigNumber, Signer, providers } from "ethers"
 import { defineReadOnly, Deferrable } from "@ethersproject/properties";
 import { GnosisSafeL2__factory } from '../typechain-types'
-import { SafeRelayer } from "./SafeRelayer";
+import { ProofOfRelayer, SafeRelayer } from "./SafeRelayer";
 import Safe from "@safe-global/protocol-kit";
 import { MultiCaller, MultiCallerOptions } from "./Multicaller";
 
@@ -24,7 +24,7 @@ export interface SafeSignerOptions {
  */
 export class SafeSigner extends Signer {
     readonly provider?: providers.Provider
-    private relayer: SafeRelayer
+    readonly relayer: SafeRelayer
 
     private multicaller?: MultiCaller
 
@@ -48,6 +48,10 @@ export class SafeSigner extends Signer {
 
     safeAddress(): Promise<string|undefined> {
         return this.relayer.predictedSafeAddress()
+    }
+
+    proofOfRelayer(): Promise<ProofOfRelayer> {
+        return this.relayer.proofOfRelayer()
     }
 
     waitForSafe(): Promise<Safe> {
