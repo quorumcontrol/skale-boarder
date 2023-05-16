@@ -14,10 +14,7 @@ enum OperationType {
 
 const SUCCESS_TOPIC = "0x442e715f626346e8c54381002da614f62bee8d27386535b2521ec8540898556e" // ethers.utils.keccak256('ExecutionSuccess(bytes32,uint256)')
 
-export interface SafeSignerOptions {
-    multicall?: boolean
-    multicallOptions?: MultiCallerOptions
-}
+export interface SafeSignerOptions {}
 
 /**
  * SafeSigner is a subclass of ethers.Signer that uses a SafeRelayer to sign and send transactions.
@@ -26,16 +23,10 @@ export class SafeSigner extends Signer {
     readonly provider?: providers.Provider
     readonly relayer: SafeRelayer
 
-    private multicaller?: MultiCaller
-
-    constructor(relayer: SafeRelayer, opts:SafeSignerOptions = {}) {
+    constructor(relayer: SafeRelayer) {
         super();
         this.relayer = relayer;
         defineReadOnly(this, "provider", relayer.provider);
-
-        if (opts.multicall) {
-            this.multicaller = new MultiCaller(relayer.provider, opts.multicallOptions)
-        }
     }
 
     connect(_provider: providers.Provider): SafeSigner {
@@ -71,9 +62,6 @@ export class SafeSigner extends Signer {
     }
 
     async call(transaction: Deferrable<providers.TransactionRequest>) {
-        if (this.multicaller) {
-            return this.multicaller.call<string>(transaction)
-        }
         return this.provider!.call(transaction)
     }
 

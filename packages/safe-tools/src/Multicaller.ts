@@ -34,7 +34,7 @@ export class MultiCaller {
 
   constructor(signerOrProvider: providers.Provider, opts:MultiCallerOptions = {}) {
     this.multicallAddress = opts.multicallAddress || SKALE_MULTICALL_3_ADDRESS
-    this.delay = opts.delay || 50
+    this.delay = opts.delay || 10
     this.provider = signerOrProvider
 
     this.multicall = Multicall3__factory.connect(this.multicallAddress, this.provider)
@@ -48,6 +48,21 @@ export class MultiCaller {
       this.queuedCalls.push({ ...call, resolve, reject })
       this.perform()
     })
+  }
+
+  wrappedProvider():providers.Provider {
+    const newCall = (tx: Call) => {
+      return this.call<string>(tx)
+    }
+
+    return new Proxy(this.provider, {
+      get: function(target, prop, receiver) {
+          if (prop === 'call') {
+              return newCall
+          }
+          return Reflect.get(target, prop, receiver);
+      }
+  });
   }
 
   // TODO: split this into windows depending on the maximum data size of the tryAggregate

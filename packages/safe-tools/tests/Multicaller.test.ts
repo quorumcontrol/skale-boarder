@@ -36,4 +36,22 @@ describe("Multicaller", () => {
     expect(res1).to.equal("0x0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000a68656c6c6f576f726c6400000000000000000000000000000000000000000000") // helloworld
     expect(res2).to.equal("0x0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000a68656c6c6f576f726c6400000000000000000000000000000000000000000000")
   });
+
+  it('wraps', async () => {
+    const { deployer, testContract, signers } = await setupTest();
+
+    const multiCaller = new MultiCaller(deployer.provider!)
+
+    const wrapped = multiCaller.wrappedProvider()
+    const tc = testContract.connect(wrapped)
+
+    const [res1, res2] = await Promise.all([
+      tc.somethingToRead(),
+      tc.somethingToRead(),
+    ])
+
+
+    expect(res1).to.equal("helloWorld") // helloworld
+    expect(res2).to.equal("helloWorld")
+  })
 });

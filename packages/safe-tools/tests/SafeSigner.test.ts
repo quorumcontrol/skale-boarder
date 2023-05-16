@@ -91,9 +91,6 @@ describe("SafeSigner", () => {
                     to: address,
                     value: ethers.utils.parseEther("2")
                 })).wait()
-            },
-            signerOptions: {
-                multicall: true,
             }
         })
 
@@ -128,9 +125,6 @@ describe("SafeSigner", () => {
                         to: address,
                         value: ethers.utils.parseEther("2")
                     })).wait()
-                },
-                signerOptions: {
-                    multicall: true,
                 }
             })
             const proof = await relayer.proofOfRelayer()
@@ -147,36 +141,6 @@ describe("SafeSigner", () => {
         const addr = await relayer.predictedSafeAddress()
 
         expect(addr).to.equal(await (await relayer.safe!).getAddress())
-    })
-
-    it("multicalls", async () => {
-        const { testContract, signers, deployer, walletDeployer, contractNetworks, deploys } = await setupTest()
-
-        const relayer = new SafeRelayer({
-            ethers,
-            signer: signers[1],
-            walletDeployerAddress: walletDeployer.address,
-            EnglishOwnerAdderAddress: deploys.EnglishOwnerAdder.address,
-            networkConfig: contractNetworks,
-            provider: deployer.provider!,
-            faucet: async (address: string) => {
-                await (await deployer.sendTransaction({
-                    to: address,
-                    value: ethers.utils.parseEther("2")
-                })).wait()
-            },
-            signerOptions: {
-                multicall: true,
-            }
-        })
-
-        const wrapped = relayer.wrappedSigner()
-        const connected = testContract.connect(wrapped)
-        const responses = await Promise.all(Array(5).fill(true).map(() => {
-            return connected.somethingToRead()
-        }))
-        expect(responses.length).to.equal(5)
-        expect(responses[0]).to.equal("helloWorld")
     })
 
     it("finds the same safe again with a new relayer", async () => {

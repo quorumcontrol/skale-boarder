@@ -58,7 +58,6 @@ export interface UserRelayerProps {
     provider: providers.Provider
     faucet: (address: Address, signer?:Signer) => Promise<void>
     localStorage?: LocalStorage
-    signerOptions?: SafeSignerOptions
     walletDeployerAddress?: Address
     EnglishOwnerAdderAddress?: Address
     setupHandlerAddress?: Address
@@ -152,7 +151,7 @@ export class SafeRelayer {
         if (this._wrappedSigner) {
             return this._wrappedSigner
         }
-        this._wrappedSigner = new SafeSigner(this, this.config.signerOptions)
+        this._wrappedSigner = new SafeSigner(this)
         return this._wrappedSigner
     }
 
