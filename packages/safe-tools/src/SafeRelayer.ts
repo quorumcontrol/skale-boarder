@@ -124,18 +124,10 @@ export class SafeRelayer {
         return wallet
     }
 
-    async predictedSafeAddress() {
+    private async predictedSafe() {
         if (!this.originalSigner) {
-            return undefined
+            throw new Error("called predictedSafe before a signer was setup")
         }
-
-        // console.log(
-        //     "fallback: ", addresses.CompatibilityFallbackHandler, 
-        //     "setup:", this.setupHandlerAddress,
-        //     "encoded", setupEncoded(),
-        //     "signer", await this.originalSigner.getAddress(),
-        // )
-
         const props:PredictedSafeProps = {
             safeAccountConfig: {
                 owners: [await this.originalSigner.getAddress()],
@@ -153,11 +145,19 @@ export class SafeRelayer {
             }
         }
 
-        const safe = await Safe.create({
+        return Safe.create({
             ethAdapter: this.ethAdapter,
             predictedSafe: props,
             contractNetworks: this.config.networkConfig,
         })
+    }
+
+    async predictedSafeAddress() {
+        if (!this.originalSigner) {
+            return undefined
+        }
+
+        const safe = await this.predictedSafe()
         return safe.getAddress()
     }
 
