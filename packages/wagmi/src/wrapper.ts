@@ -1,9 +1,10 @@
 import {
+  addresses,
   SafeRelayer,
   UserRelayerProps,
 } from "@skaleboarder/safe-tools";
-import { ethers, providers, Signer } from "ethers";
 import { Connector } from "wagmi";
+import type { ethers, providers, Signer } from "ethers";
 
 type Address = string;
 
@@ -14,8 +15,8 @@ interface ContractDeploy {
 export interface WagmiWrapperConfig {
   ethers: typeof ethers;
   provider: providers.Provider;
-  chainId: string;
-  deploys: {
+  faucet: UserRelayerProps["faucet"];
+  deploys?: Partial<{
     GnosisSafe: ContractDeploy;
     GnosisSafeProxyFactory: ContractDeploy;
     MultiSend: ContractDeploy;
@@ -25,8 +26,7 @@ export interface WagmiWrapperConfig {
     CreateCall: ContractDeploy;
     EnglishOwnerAdder: ContractDeploy;
     WalletDeployer: ContractDeploy;
-  };
-  faucet: UserRelayerProps["faucet"];
+  }>;
   localStorage?: UserRelayerProps["localStorage"];
 }
 
@@ -37,30 +37,15 @@ export class WagmiWrapper {
     this.config = config;
   }
 
-  // create contract configs
-  private contractConfigs() {
-    return {
-      [this.config.chainId]: {
-        safeMasterCopyAddress: this.config.deploys.GnosisSafe.address,
-        safeProxyFactoryAddress:
-          this.config.deploys.GnosisSafeProxyFactory.address,
-        multiSendAddress: this.config.deploys.MultiSend.address,
-        multiSendCallOnlyAddress: this.config.deploys.MultiSendCallOnly.address,
-        fallbackHandlerAddress:
-          this.config.deploys.CompatibilityFallbackHandler.address,
-        signMessageLibAddress: this.config.deploys.SignMessageLib.address,
-        createCallAddress: this.config.deploys.CreateCall.address,
-      },
-    };
-  }
-
   private createRelayer = (signer: Signer) => {
     return new SafeRelayer({
-      ethers,
+      ethers: this.config.ethers,
       signer,
-      EnglishOwnerAdderAddress: this.config.deploys.EnglishOwnerAdder.address,
-      walletDeployerAddress: this.config.deploys.WalletDeployer.address,
-      networkConfig: this.contractConfigs(),
+      EnglishOwnerAdderAddress:
+        this.config.deploys?.EnglishOwnerAdder?.address ||
+        addresses.default.EnglishOwnerAdder,
+      walletDeployerAddress: this.config.deploys?.WalletDeployer?.address ||
+        addresses.default.WalletDeployer,
       provider: this.config.provider,
       localStorage: this.config.localStorage,
       faucet: this.config.faucet,
@@ -80,13 +65,13 @@ export class WagmiWrapper {
               return this.config.provider;
             };
           case "getSigner":
-            console.log("get getSigner");
             return () => {
               if (signerPromise) {
                 return signerPromise;
               }
               signerPromise = (async () => {
                 const original = await target.getSigner();
+                console.log("original signer: ", original);
                 const relayer = this.createRelayer(original);
                 return relayer.wrappedSigner();
               })();

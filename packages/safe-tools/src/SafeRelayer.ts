@@ -2,7 +2,6 @@ import { providers, Signer, ethers, BigNumber, constants, BytesLike, utils, Void
 import { getBytesAndCreateToken, TokenRequest } from './tokenCreator'
 import { EnglishOwnerAdder, EnglishOwnerAdder__factory, GnosisSafeL2, GnosisSafeProxyFactory__factory, WalletDeployer, WalletDeployer__factory } from '../typechain-types'
 import SimpleSyncher from './SimpleSyncher'
-// import Safe, { EthersAdapter, ContractNetworksConfig, PredictedSafeProps } from '@safe-global/protocol-kit'
 import { SafeSigner, SafeSignerOptions } from './SafeSigner'
 import addresses from './addresses'
 import { GnosisSafeL2__factory, GnosisSafe__factory } from '../typechain-types/factories/gnosis-safe-artifacts/contracts'
@@ -14,6 +13,8 @@ const proxyCreationCode = "0x608060405234801561001057600080fd5b506040516101e6380
 
 // this is the signature of "setup()"
 const setupFunctionEncoded = "0xba0bba40"
+
+const voidMasterCopy = GnosisSafeL2__factory.connect(constants.AddressZero, new VoidSigner(""))
 
 export class MemoryLocalStorage {
     private store: { [key: string]: string } = {}
@@ -112,14 +113,6 @@ export class SafeRelayer {
         return this.safe
     }
 
-    async isDeployed() {
-        const addr = await this.predictedSafeAddress()
-        if (!addr) {
-            return false
-        }
-        return (await this.provider.getCode(addr)) !== '0x'
-    }
-
     async proofOfRelayer():Promise<ProofOfRelayer> {
         const proof = {
           address: await this.localRelayer.getAddress(),
@@ -133,7 +126,7 @@ export class SafeRelayer {
         if (!safeAddr) {
             throw new Error("missing even predicted address")
         }
-        const isDeployed = await this.isDeployed()
+        const isDeployed = await this.isDeployed(safeAddr)
 
         const safe = GnosisSafeL2__factory.connect(safeAddr, this.provider)
         const isDeployedAndReady = isDeployed && await safe.isOwner(await this.localRelayer.getAddress())
@@ -189,33 +182,13 @@ export class SafeRelayer {
         return wallet
     }
 
-    // private async predictedSafe() {
-    //     if (!this.originalSigner) {
-    //         throw new Error("called predictedSafe before a signer was setup")
-    //     }
-    //     const props:PredictedSafeProps = {
-    //         safeAccountConfig: {
-    //             owners: [await this.originalSigner.getAddress()],
-    //             threshold: 1,
-    //             to: this.setupHandlerAddress.toLowerCase(),
-    //             data: setupFunctionEncoded,
-    //             fallbackHandler: addresses.CompatibilityFallbackHandler,
-    //             payment: 0,
-    //             paymentReceiver: constants.AddressZero,
-    //             paymentToken: constants.AddressZero,
-    //         },
-    //         safeDeploymentConfig: {
-    //             safeVersion: '1.3.0',
-    //             saltNonce: BigNumber.from(await this.localRelayer.getChainId()).toHexString(),
-    //         }
-    //     }
-
-    //     return Safe.create({
-    //         ethAdapter: this.ethAdapter,
-    //         predictedSafe: props,
-    //         contractNetworks: this.config.networkConfig,
-    //     })
-    // }
+    private async setupDataForUser(user:Address) {
+        const setupData = await voidMasterCopy.populateTransaction.setup([user], 1, this.setupHandlerAddress, setupFunctionEncoded, addresses.CompatibilityFallbackHandler, constants.AddressZero, 0, constants.AddressZero)
+        if (!setupData.data) {
+            throw new Error("no setup data")
+        }
+        return setupData.data
+    }
 
     async predictedSafeAddress() {
         if (!this.originalSigner) {
@@ -225,28 +198,14 @@ export class SafeRelayer {
         const originalAddress = await this.originalSigner.getAddress()
         const chainId = await this.localRelayer.getChainId()
 
-        const voidMasterCopy = GnosisSafeL2__factory.connect(constants.AddressZero, new VoidSigner(""))
-
-        async function setupDataForUser(user:Address) {
-            const setupData = await voidMasterCopy.populateTransaction.setup([user], 1, addresses.SafeSetup, setupFunctionEncoded, addresses.CompatibilityFallbackHandler, constants.AddressZero, 0, constants.AddressZero)
-            if (!setupData.data) {
-                throw new Error("no setup data")
-            }
-            return setupData.data
-          }
-
         const proxyFactory = GnosisSafeProxyFactory__factory.connect(addresses.GnosisSafeProxyFactory, this.provider)
 
-        const setupData = await setupDataForUser(originalAddress)
+        const setupData = await this.setupDataForUser(originalAddress)
 
         const salt = utils.keccak256(utils.solidityPack(['bytes', 'uint256'], [utils.keccak256(setupData), chainId]))
         const initCode = utils.solidityKeccak256(['bytes', 'bytes'], [proxyCreationCode, utils.defaultAbiCoder.encode(['address'], [addresses.GnosisSafe])])
         
-        const addr = utils.getCreate2Address(proxyFactory.address, salt, initCode)
-        return addr
-
-        // const safe = await this.predictedSafe()
-        // return safe.getAddress()
+        return utils.getCreate2Address(proxyFactory.address, salt, initCode)
     }
 
     private async createSafe(tokenRequest: TokenRequest, signature: BytesLike) {
@@ -254,10 +213,6 @@ export class SafeRelayer {
             throw new Error('No signer set')
         }
         try {
-            // console.log('using faucet')
-            // console.log("create safe")
-            // const ownerAddr = await this.originalSigner.getAddress()
-            // then we need to create a new safe
             const tx = await this.walletDeployer.createSafe(tokenRequest, signature, this.englishAdder.address, [])
             
             return tx.wait()
@@ -285,6 +240,7 @@ export class SafeRelayer {
         }
     }
 
+    // TODO: look to see if this has expired
     private findOrCreateAuthorization() {
         if (this.authorization) {
             return this.authorization
@@ -320,13 +276,10 @@ export class SafeRelayer {
         return { tokenRequest, signature }
     }
 
-    // private async connectSafe(safe:Safe):Promise<Safe> {
-    //     return safe.connect({
-    //         ethAdapter: this.ethAdapter,
-    //         safeAddress: await safe.getAddress(),
-    //         contractNetworks: this.config.networkConfig,
-    //     })
-    // }
+
+    private async isDeployed(safeAddr: Address) {
+        return (await this.provider.getCode(safeAddr)) !== '0x'
+    }
 
     private setupSignerAndFindOrCreateSafe(signer:Signer) {
         this.originalSigner = signer
@@ -336,8 +289,8 @@ export class SafeRelayer {
                     throw new Error('No signer set')
                 }
                 
-                const safe = await GnosisSafeL2__factory.connect((await this.predictedSafeAddress())!, this.localRelayer)
-                const isDeployed = await this.isDeployed()
+                const safe = GnosisSafeL2__factory.connect((await this.predictedSafeAddress())!, this.localRelayer)
+                const isDeployed = await this.isDeployed(safe.address)
 
                 if (!isDeployed) {
                     const { tokenRequest, signature } = await this.findOrCreateAuthorizationAndCallFaucet()
