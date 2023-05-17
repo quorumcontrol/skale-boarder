@@ -2,8 +2,6 @@ import { BigNumber, BigNumberish, BytesLike, Signer, Wallet } from "ethers";
 import { keccak256 } from "ethers/lib/utils";
 import { GnosisSafeL2 } from "../typechain-types";
 
-const log = console.log;
-
 const MIN_VALID_V_VALUE = 27;
 
 export enum OPERATION {
@@ -24,7 +22,7 @@ export const adjustV = (signature: string): string => {
   return signature.slice(0, -2) + sigV.toString(16);
 };
 
-export const knownVAdjust = (signature: string, num: number): string => {
+export const knownVAdjust = (signature: string): string => {
   let sigV = parseInt(signature.slice(-2), 16);
 
   sigV += 4;
@@ -52,20 +50,6 @@ export const signer = async function (
     value = BigNumber.from(value);
   }
 
-//   log(
-//     // "using ledger for signature",
-//     await signer.getAddress(),
-//     to,
-//     value,
-//     data,
-//     operation,
-//     txGasEstimate,
-//     baseGasEstimate,
-//     gasPrice,
-//     txGasToken,
-//     refundReceiver,
-//     nonce,
-//   );
   data = await safe.encodeTransactionData(
     to,
     value,
@@ -83,5 +67,5 @@ export const signer = async function (
 //   log("hash: ", dataHash.toString("hex"));
   const sig = await signer.signMessage(dataHash);
 //   log("sig: ", sig);
-  return knownVAdjust(adjustV(sig), 4);
+  return knownVAdjust(adjustV(sig));
 };
