@@ -16,7 +16,7 @@ import {
 import { configureChains, createClient, WagmiConfig } from 'wagmi';
 import { mainnet, polygon, optimism, arbitrum } from 'wagmi/chains';
 import { createChain, RainbowKitWalletWrapper } from '@skaleboarder/rainbowkit';
-import addresses from "../addresses.json"
+import { MultiCaller } from '@skaleboarder/safe-tools';
 
 const skaleMainnet = createChain({
   id: BigNumber.from('0x3d91725c').toNumber(),
@@ -48,8 +48,13 @@ const localDev = createChain({
   explorer: "http://no.explorer"
 })
 
+const getProvider = () => {
+  const multicaller = new MultiCaller(new providers.StaticJsonRpcProvider(localDev.rpcUrls.default.http[0]))
+  return multicaller.wrappedProvider()
+}
+
 // you can setup a 
-const skaleProvider = new providers.StaticJsonRpcProvider(localDev.rpcUrls.default.http[0])
+const skaleProvider = getProvider()
 
 // const wrapper = new RainbowKitWalletWrapper({
 //     ethers,
@@ -67,11 +72,12 @@ const wrapperConfigs = {
   ethers,
   provider: skaleProvider,
   chainId: localDev.id.toString(),
-  deploys: addresses.contracts,
+  // deploys: addresses.contracts,
   faucet: async (address: string) => {
     const resp = await fetch(`/api/localFaucet`, { body: JSON.stringify({ address }), method: "POST" })
-    const json = await resp.json()
-    console.log("resp: ", json)
+    const { transactionHash } = await resp.json()
+    console.log("faucet transaction: ", transactionHash)
+    await skaleProvider.waitForTransaction(transactionHash)
   },
   signerOptions: {
     multicall: true,

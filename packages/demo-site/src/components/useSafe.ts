@@ -15,8 +15,7 @@ export const useSafeFromUser = () => {
     return useQuery(
         ["safeFromUser", address],
         async () => {
-            const safe = await (signer as SafeSigner).waitForSafe()
-            return safe.getAddress()
+            return (signer as SafeSigner).safeAddress()
         },
         {
             enabled: isConnected && !!signer,

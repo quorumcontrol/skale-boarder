@@ -80,7 +80,7 @@ export class SafeSigner extends Signer {
                 
                 const nonce = await safeContract.nonce()
 
-                console.log("populated: ", populated.gasLimit)
+                // console.log("populated: ", populated)
                 
                 const [txData] = await safeFromPopulated(
                     safeContract,
@@ -90,16 +90,17 @@ export class SafeSigner extends Signer {
                     populated.data!,
                     OPERATION.CALL,
                     {
-                        gasLimit: populated.gasLimit || 4_000_000
+                        gasLimit: 4_000_000 // TODO: be more nuanced about this... for some reason though doing 1.2 * estimateGas doesn't work and makes the test fail
                     }
                 )
 
                 const tx = await this.relayer.localRelayer.sendTransaction(txData)
+                console.log("tx: ", tx.hash)
                 
                 const originalWait = tx.wait
                 tx.wait = async (confirmations?: number): Promise<ethers.ContractReceipt> => {
                     const receipt = await originalWait(confirmations)
-
+                    // console.log("receipt: ", receipt)
                     // purposely *removing* the SUCCESS_TOPIC so that the transaction looks *just* like a normal transaction
                     const lastLog = receipt.logs.pop()
                     if (lastLog?.topics[0] === SUCCESS_TOPIC) {
@@ -114,6 +115,7 @@ export class SafeSigner extends Signer {
                         })
                         return receipt
                     }
+                    console.error("transaction failed: ", receipt, tx)
                     throw new Error("transaction failed")
                 }
 

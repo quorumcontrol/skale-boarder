@@ -12,8 +12,12 @@ const SomethingToWrite: React.FC = () => {
         functionName: 'increment',
     })
 
-    const { data, isSuccess, isLoading, write } = useContractWrite(config)
+    const { data, isSuccess, isLoading, write, error } = useContractWrite(config)
     // console.log("write: ", write, config)
+
+    if (error) {
+        console.error("error with transaction: ", error)
+    }
 
     if (!isConnected) {
         return null
