@@ -2,9 +2,9 @@ import { providers, Signer, ethers, BigNumber, constants, BytesLike, utils, Void
 import { getBytesAndCreateToken, TokenRequest } from './tokenCreator'
 import { EnglishOwnerAdder, EnglishOwnerAdder__factory, GnosisSafeL2, GnosisSafeProxyFactory__factory, WalletDeployer, WalletDeployer__factory } from '../typechain-types'
 import SimpleSyncher from './SimpleSyncher'
-import { SafeSigner, SafeSignerOptions } from './SafeSigner'
+import { SafeSigner } from './SafeSigner'
 import addresses from './addresses'
-import { GnosisSafeL2__factory, GnosisSafe__factory } from '../typechain-types/factories/gnosis-safe-artifacts/contracts'
+import { GnosisSafeL2__factory } from '../typechain-types/factories/gnosis-safe-artifacts/contracts'
 
 const KEY_FOR_PRIVATE_KEY = 'safe-relayer-pk'
 

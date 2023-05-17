@@ -1,4 +1,4 @@
-import { ethers, Signer, providers } from "ethers"
+import { ethers, Signer, providers, BigNumber } from "ethers"
 import { defineReadOnly, Deferrable } from "@ethersproject/properties";
 import { GnosisSafeL2, GnosisSafeL2__factory } from '../typechain-types'
 import { ProofOfRelayer, SafeRelayer } from "./SafeRelayer";
@@ -80,6 +80,8 @@ export class SafeSigner extends Signer {
                 
                 const nonce = await safeContract.nonce()
 
+                console.log("populated: ", populated.gasLimit)
+                
                 const [txData] = await safeFromPopulated(
                     safeContract,
                     nonce,
@@ -88,7 +90,7 @@ export class SafeSigner extends Signer {
                     populated.data!,
                     OPERATION.CALL,
                     {
-                        gasLimit: 3_000_000
+                        gasLimit: populated.gasLimit || 4_000_000
                     }
                 )
 

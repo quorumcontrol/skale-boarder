@@ -1,4 +1,4 @@
-import { BigNumber, BigNumberish, BytesLike, Signer, Wallet } from "ethers";
+import { BigNumber, BigNumberish, BytesLike, Signer } from "ethers";
 import { keccak256 } from "ethers/lib/utils";
 import { GnosisSafeL2 } from "../typechain-types";
 
