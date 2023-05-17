@@ -1,4 +1,3 @@
-import { ContractNetworksConfig } from "@safe-global/protocol-kit";
 import { expect } from "chai";
 import { deployments, ethers } from "hardhat";
 import { MemoryLocalStorage, SafeRelayer } from "../src/SafeRelayer";
@@ -17,17 +16,6 @@ describe("SafeSigner", () => {
 
             const chainId = await deployer.provider!.getNetwork().then(n => n.chainId)
 
-            // const contractNetworks: ContractNetworksConfig = {
-            //     [chainId]: {
-            //         safeMasterCopyAddress: deploys.GnosisSafe.address,
-            //         safeProxyFactoryAddress: deploys.GnosisSafeProxyFactory.address,
-            //         multiSendAddress: deploys.MultiSend.address,
-            //         multiSendCallOnlyAddress: deploys.MultiSendCallOnly.address,
-            //         fallbackHandlerAddress: deploys.CompatibilityFallbackHandler.address,
-            //         signMessageLibAddress: deploys.SignMessageLib.address,
-            //         createCallAddress: deploys.CreateCall.address,
-            //     }
-            // }
             const WalletDeployerFactory:WalletDeployer__factory = await ethers.getContractFactory("WalletDeployer")
 
             const walletDeployer = (WalletDeployerFactory).attach(deploys.WalletDeployer.address).connect(deployer)
