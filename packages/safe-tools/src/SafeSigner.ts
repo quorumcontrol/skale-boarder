@@ -3,7 +3,7 @@ import { defineReadOnly, Deferrable } from "@ethersproject/properties";
 import { GnosisSafeL2, GnosisSafeL2__factory } from '../typechain-types'
 import { ProofOfRelayer, SafeRelayer } from "./SafeRelayer";
 import { OPERATION } from "./txSigner";
-import { safeFromPopulated } from "./GnosisHelpers";
+import { safeTxFromPopulated } from "./GnosisHelpers";
 
 const GnosisSafeInterface = GnosisSafeL2__factory.createInterface()
 
@@ -82,7 +82,7 @@ export class SafeSigner extends Signer {
 
                 // console.log("populated: ", populated)
                 
-                const [txData] = await safeFromPopulated(
+                const [txData] = await safeTxFromPopulated(
                     safeContract,
                     nonce,
                     this.relayer.localRelayer,
@@ -95,7 +95,6 @@ export class SafeSigner extends Signer {
                 )
 
                 const tx = await this.relayer.localRelayer.sendTransaction(txData)
-                console.log("tx: ", tx.hash)
                 
                 const originalWait = tx.wait
                 tx.wait = async (confirmations?: number): Promise<ethers.ContractReceipt> => {

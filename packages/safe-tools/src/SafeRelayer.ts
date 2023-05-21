@@ -1,20 +1,13 @@
-import { providers, Signer, ethers, BigNumber, constants, BytesLike, utils, VoidSigner } from 'ethers'
+import { providers, Signer, ethers, BytesLike } from 'ethers'
 import { getBytesAndCreateToken, TokenRequest } from './tokenCreator'
-import { EnglishOwnerAdder, EnglishOwnerAdder__factory, GnosisSafeL2, GnosisSafeProxyFactory__factory, WalletDeployer, WalletDeployer__factory } from '../typechain-types'
+import { EnglishOwnerAdder, EnglishOwnerAdder__factory, GnosisSafeL2, WalletDeployer, WalletDeployer__factory } from '../typechain-types'
 import SimpleSyncher from './SimpleSyncher'
 import { SafeSigner } from './SafeSigner'
 import addresses from './addresses'
 import { GnosisSafeL2__factory } from '../typechain-types/factories/gnosis-safe-artifacts/contracts'
+import { safeAddress } from './GnosisHelpers'
 
 const KEY_FOR_PRIVATE_KEY = 'safe-relayer-pk'
-
-// saves a call to GnosisSafeProxyFactory#proxyCreationCode()
-const proxyCreationCode = "0x608060405234801561001057600080fd5b506040516101e63803806101e68339818101604052602081101561003357600080fd5b8101908080519060200190929190505050600073ffffffffffffffffffffffffffffffffffffffff168173ffffffffffffffffffffffffffffffffffffffff1614156100ca576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004018080602001828103825260228152602001806101c46022913960400191505060405180910390fd5b806000806101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff1602179055505060ab806101196000396000f3fe608060405273ffffffffffffffffffffffffffffffffffffffff600054167fa619486e0000000000000000000000000000000000000000000000000000000060003514156050578060005260206000f35b3660008037600080366000845af43d6000803e60008114156070573d6000fd5b3d6000f3fea2646970667358221220d1429297349653a4918076d650332de1a1068c5f3e07c5c82360c277770b955264736f6c63430007060033496e76616c69642073696e676c65746f6e20616464726573732070726f7669646564"
-
-// this is the signature of "setup()"
-const setupFunctionEncoded = "0xba0bba40"
-
-const voidMasterCopy = GnosisSafeL2__factory.connect(constants.AddressZero, new VoidSigner(""))
 
 export class MemoryLocalStorage {
     private store: { [key: string]: string } = {}
@@ -72,7 +65,6 @@ export class SafeRelayer {
     private englishAdder: EnglishOwnerAdder
     private _wrappedSigner?: SafeSigner
 
-    private setupHandlerAddress: Address
     private localStorage: LocalStorage
 
     private authorization?: Promise<{ tokenRequest: TokenRequest, signature: BytesLike}>
@@ -100,7 +92,6 @@ export class SafeRelayer {
         this.singleton = new SimpleSyncher("safe-relayer")
         // this signer is the original signer, we'll use it to approve the safe.
         this.setupSignerAndFindOrCreateSafe(config.signer)
-        this.setupHandlerAddress = config.setupHandlerAddress || addresses.SafeSetup
     }
 
     get provider() {
@@ -182,30 +173,17 @@ export class SafeRelayer {
         return wallet
     }
 
-    private async setupDataForUser(user:Address) {
-        const setupData = await voidMasterCopy.populateTransaction.setup([user], 1, this.setupHandlerAddress, setupFunctionEncoded, addresses.CompatibilityFallbackHandler, constants.AddressZero, 0, constants.AddressZero)
-        if (!setupData.data) {
-            throw new Error("no setup data")
-        }
-        return setupData.data
-    }
-
     async predictedSafeAddress() {
         if (!this.originalSigner) {
             return undefined
         }
 
-        const originalAddress = await this.originalSigner.getAddress()
-        const chainId = await this.localRelayer.getChainId()
+        const [originalAddress, chainId] = await Promise.all([
+            this.originalSigner.getAddress(),
+            this.localRelayer.getChainId()
+        ])
 
-        const proxyFactory = GnosisSafeProxyFactory__factory.connect(addresses.GnosisSafeProxyFactory, this.provider)
-
-        const setupData = await this.setupDataForUser(originalAddress)
-
-        const salt = utils.keccak256(utils.solidityPack(['bytes', 'uint256'], [utils.keccak256(setupData), chainId]))
-        const initCode = utils.solidityKeccak256(['bytes', 'bytes'], [proxyCreationCode, utils.defaultAbiCoder.encode(['address'], [addresses.GnosisSafe])])
-        
-        return utils.getCreate2Address(proxyFactory.address, salt, initCode)
+        return safeAddress(originalAddress, chainId)
     }
 
     private async createSafe(tokenRequest: TokenRequest, signature: BytesLike) {

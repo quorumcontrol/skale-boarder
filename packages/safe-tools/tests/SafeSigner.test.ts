@@ -154,7 +154,7 @@ describe("SafeSigner", () => {
         await expect(testContract.connect(wrapped).echo("hi", false)).to.not.be.reverted
     });
 
-    it.only('executes a transaction after a fire-and-forget setSigner', async () => {
+    it('executes a transaction after a fire-and-forget setSigner', async () => {
         const { relayer, testContract } = await setupTest()
         
         const wrapped = relayer.wrappedSigner()
